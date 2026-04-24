@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Focus Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@0,100..900;1,100..900&amp;family=Space+Grotesk:wght@300..700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-primary": "#c8c6c5",
+                        "on-primary": "#ffffff",
+                        "surface-variant": "#e5e2e1",
+                        "surface-container-high": "#ebe7e6",
+                        "inverse-surface": "#313030",
+                        "on-error": "#ffffff",
+                        "on-surface": "#1c1b1b",
+                        "outline-variant": "#c4c7c7",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#e5e2e1",
+                        "secondary-container": "#e2e2e2",
+                        "inverse-on-surface": "#f4f0ef",
+                        "on-tertiary-fixed": "#1c1b1a",
+                        "surface-tint": "#5f5e5e",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-container": "#868382",
+                        "on-secondary-container": "#636465",
+                        "surface-container-highest": "#e5e2e1",
+                        "secondary-fixed": "#e2e2e2",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#484645",
+                        "surface-bright": "#fdf8f8",
+                        "on-error-container": "#93000a",
+                        "tertiary-container": "#1c1b1a",
+                        "on-secondary-fixed-variant": "#454747",
+                        "surface-container": "#f1edec",
+                        "on-surface-variant": "#444748",
+                        "primary-fixed-dim": "#c8c6c5",
+                        "tertiary": "#000000",
+                        "tertiary-fixed-dim": "#cac6c4",
+                        "on-tertiary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "outline": "#747878",
+                        "on-secondary-fixed": "#1a1c1c",
+                        "primary-container": "#1c1b1b",
+                        "surface-container-low": "#f7f3f2",
+                        "surface-dim": "#ddd9d8",
+                        "surface": "#fdf8f8",
+                        "secondary": "#5d5f5f",
+                        "primary": "#000000",
+                        "on-primary-fixed-variant": "#474746",
+                        "background": "#fdf8f8",
+                        "on-primary-fixed": "#1c1b1b",
+                        "secondary-fixed-dim": "#c6c6c6",
+                        "on-background": "#1c1b1b",
+                        "on-primary-container": "#858383",
+                        "tertiary-fixed": "#e6e2df"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "16px",
+                        "gutter": "24px",
+                        "grid_columns": "12",
+                        "base": "4px",
+                        "lg": "40px",
+                        "xl": "64px",
+                        "md": "24px",
+                        "xs": "8px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Space Grotesk"],
+                        "label-caps": ["Space Grotesk"],
+                        "h1": ["Epilogue"],
+                        "display": ["Epilogue"],
+                        "h2": ["Epilogue"],
+                        "body-md": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "500"}],
+                        "label-caps": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                        "h1": ["32px", {"lineHeight": "1.2", "fontWeight": "800"}],
+                        "display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800"}],
+                        "h2": ["24px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .hard-shadow {
+            box-shadow: 4px 4px 0px 0px #1a1a1a;
+        }
+        .hard-shadow:active {
+            box-shadow: 0px 0px 0px 0px #1a1a1a;
+            transform: translate(4px, 4px);
+        }
+        .retro-border {
+            border: 2px solid #1a1a1a;
+        }
+        .retro-border-thick {
+            border: 4px solid #1a1a1a;
+        }
+        .checkerboard-hover:hover {
+            background-image: linear-gradient(45deg, #e5e2e1 25%, transparent 25%), linear-gradient(-45deg, #e5e2e1 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e5e2e1 75%), linear-gradient(-45deg, transparent 75%, #e5e2e1 75%);
+            background-size: 8px 8px;
+            background-position: 0 0, 0 4px, 4px -4px, -4px 0px;
+        }
+        
+        /* Noise texture overlay */
+        .noise-bg {
+            position: relative;
+        }
+        .noise-bg::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Circular Progress styling */
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md min-h-screen noise-bg selection:bg-primary selection:text-on-primary">
+<!-- TopAppBar (Web) / Hidden on Mobile -->
+<header class="hidden md:flex fixed top-0 w-full h-16 justify-between items-center px-6 z-50 bg-white dark:bg-zinc-900 border-b-4 border-zinc-900 dark:border-zinc-100">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-zinc-900 dark:text-zinc-100">terminal</span>
+<span class="font-['Epilogue'] font-bold uppercase tracking-tighter text-2xl font-black italic tracking-tighter text-zinc-900 dark:text-zinc-100">PROD_SYS</span>
+</div>
+<div class="flex gap-lg items-center">
+<nav class="flex gap-md">
+<a class="font-['Epilogue'] font-bold uppercase tracking-tighter text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors px-xs py-base active:translate-y-1" href="#">TASKS</a>
+<a class="font-['Epilogue'] font-bold uppercase tracking-tighter text-zinc-900 dark:text-zinc-100 font-black hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors px-xs py-base active:translate-y-1" href="#">FLOW</a>
+<a class="font-['Epilogue'] font-bold uppercase tracking-tighter text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors px-xs py-base active:translate-y-1" href="#">STATS</a>
+<a class="font-['Epilogue'] font-bold uppercase tracking-tighter text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors px-xs py-base active:translate-y-1" href="#">SYNC</a>
+</nav>
+<span class="material-symbols-outlined text-zinc-900 dark:text-zinc-100 cursor-pointer active:translate-y-1">settings</span>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="pt-[80px] pb-[100px] md:pb-lg px-sm md:px-gutter max-w-7xl mx-auto min-h-screen flex flex-col md:flex-row gap-gutter">
+<!-- Left Column: Focus Ring -->
+<section class="flex-1 flex flex-col items-center justify-center p-lg bg-surface-container-lowest retro-border hard-shadow mb-gutter md:mb-0">
+<div class="mb-lg text-center">
+<h1 class="font-h1 text-h1 uppercase mb-base">Deep Work</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Session 2 of 4</p>
+</div>
+<div class="relative w-64 h-64 md:w-80 md:h-80 flex items-center justify-center mb-lg">
+<!-- SVG Ring -->
+<svg class="absolute w-full h-full" viewbox="0 0 120 120">
+<circle class="text-surface-variant" cx="60" cy="60" fill="transparent" r="52" stroke="currentColor" stroke-width="8"></circle>
+<!-- stroke-dasharray = 2 * PI * r = 2 * 3.1415 * 52 = 326.7 -->
+<!-- stroke-dashoffset = 326.7 * (1 - percentage) = 326.7 * 0.25 (for 75% complete) -->
+<circle class="progress-ring__circle text-primary" cx="60" cy="60" fill="transparent" r="52" stroke="currentColor" stroke-dasharray="326.7" stroke-dashoffset="81.67" stroke-linecap="butt" stroke-width="8"></circle>
+</svg>
+<!-- Inner Timer -->
+<div class="z-10 flex flex-col items-center">
+<span class="font-display text-display tabular-nums tracking-tighter">25:00</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant mt-base uppercase">Remaining</span>
+</div>
+</div>
+<div class="flex gap-md w-full justify-center">
+<button class="flex items-center gap-xs px-md py-sm bg-primary text-on-primary retro-border hard-shadow font-label-caps text-label-caps uppercase transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                    Start Session
+                </button>
+<button class="flex items-center justify-center w-12 h-12 bg-surface-container-lowest text-primary retro-border hard-shadow transition-transform">
+<span class="material-symbols-outlined">restart_alt</span>
+</button>
+</div>
+</section>
+<!-- Right Column: Stats & Tasks -->
+<section class="w-full md:w-[400px] flex flex-col gap-gutter">
+<!-- Daily Stats Bento -->
+<div class="grid grid-cols-2 gap-sm">
+<!-- Score Card -->
+<div class="bg-surface-container-lowest p-md retro-border hard-shadow flex flex-col justify-between h-32">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Focus Score</span>
+<div class="flex items-end gap-base">
+<span class="font-display text-[40px] leading-none font-extrabold tracking-tighter">84</span>
+<span class="material-symbols-outlined text-outline mb-1">trending_up</span>
+</div>
+</div>
+<!-- Time Card -->
+<div class="bg-surface-container-lowest p-md retro-border hard-shadow flex flex-col justify-between h-32">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Focus Time</span>
+<div class="flex flex-col">
+<span class="font-display text-[32px] leading-none font-extrabold tracking-tighter">3<span class="text-h2">h</span> 45<span class="text-h2">m</span></span>
+</div>
+</div>
+</div>
+<!-- Up Next List -->
+<div class="bg-surface-container-lowest retro-border hard-shadow flex-1 flex flex-col">
+<div class="p-sm border-b-2 border-primary flex justify-between items-center bg-surface">
+<h2 class="font-h2 text-h2 uppercase text-lg">Up Next</h2>
+<span class="material-symbols-outlined cursor-pointer hover:bg-surface-variant p-base">add</span>
+</div>
+<div class="flex flex-col">
+<!-- Task Item -->
+<div class="p-sm border-b-2 border-primary flex items-center gap-sm checkerboard-hover cursor-pointer transition-colors">
+<div class="w-6 h-6 retro-border flex-shrink-0 bg-surface"></div>
+<div class="flex-1">
+<p class="font-body-md text-body-md font-bold">Draft Q3 Report</p>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-1">High Priority</p>
+</div>
+<span class="font-label-caps text-label-caps bg-surface-variant px-2 py-1 retro-border">45m</span>
+</div>
+<!-- Task Item -->
+<div class="p-sm border-b-2 border-primary flex items-center gap-sm checkerboard-hover cursor-pointer transition-colors">
+<div class="w-6 h-6 retro-border flex-shrink-0 bg-surface"></div>
+<div class="flex-1">
+<p class="font-body-md text-body-md font-bold">Review PR #42</p>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-1">Engineering</p>
+</div>
+<span class="font-label-caps text-label-caps bg-surface-variant px-2 py-1 retro-border">25m</span>
+</div>
+<!-- Task Item (Completed) -->
+<div class="p-sm flex items-center gap-sm checkerboard-hover cursor-pointer transition-colors opacity-50">
+<div class="w-6 h-6 retro-border flex-shrink-0 bg-primary flex items-center justify-center">
+<div class="w-2 h-2 bg-on-primary"></div>
+</div>
+<div class="flex-1">
+<p class="font-body-md text-body-md font-bold line-through">Morning Standup</p>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-1">Meeting</p>
+</div>
+<span class="font-label-caps text-label-caps bg-surface-variant px-2 py-1 retro-border">15m</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Mobile) / Hidden on Web -->
+<nav class="md:hidden fixed bottom-0 w-full h-20 flex justify-around items-stretch z-50 bg-white dark:bg-zinc-900 border-t-4 border-zinc-900 dark:border-zinc-100">
+<a class="flex flex-col items-center justify-center text-zinc-900 dark:text-zinc-100 opacity-60 hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-transform flex-1" href="#">
+<span class="material-symbols-outlined mb-1">checklist</span>
+<span class="font-['Epilogue'] text-[10px] font-bold uppercase tracking-widest">TASKS</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 w-full h-full hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-transform flex-1" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">timer</span>
+<span class="font-['Epilogue'] text-[10px] font-bold uppercase tracking-widest">FLOW</span>
+</a>
+<a class="flex flex-col items-center justify-center text-zinc-900 dark:text-zinc-100 opacity-60 hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-transform flex-1" href="#">
+<span class="material-symbols-outlined mb-1">bar_chart</span>
+<span class="font-['Epilogue'] text-[10px] font-bold uppercase tracking-widest">STATS</span>
+</a>
+<a class="flex flex-col items-center justify-center text-zinc-900 dark:text-zinc-100 opacity-60 hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-transform flex-1" href="#">
+<span class="material-symbols-outlined mb-1">sync</span>
+<span class="font-['Epilogue'] text-[10px] font-bold uppercase tracking-widest">SYNC</span>
+</a>
+</nav>
+</body></html>

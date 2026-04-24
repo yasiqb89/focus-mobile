@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Limits &amp; Rules - PROD_SYS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&amp;family=Epilogue:ital,wght@0,700;0,800;1,900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-primary": "#c8c6c5",
+                        "on-primary": "#ffffff",
+                        "surface-variant": "#e5e2e1",
+                        "surface-container-high": "#ebe7e6",
+                        "inverse-surface": "#313030",
+                        "on-error": "#ffffff",
+                        "on-surface": "#1c1b1b",
+                        "outline-variant": "#c4c7c7",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#e5e2e1",
+                        "secondary-container": "#e2e2e2",
+                        "inverse-on-surface": "#f4f0ef",
+                        "on-tertiary-fixed": "#1c1b1a",
+                        "surface-tint": "#5f5e5e",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-container": "#868382",
+                        "on-secondary-container": "#636465",
+                        "surface-container-highest": "#e5e2e1",
+                        "secondary-fixed": "#e2e2e2",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#484645",
+                        "surface-bright": "#fdf8f8",
+                        "on-error-container": "#93000a",
+                        "tertiary-container": "#1c1b1a",
+                        "on-secondary-fixed-variant": "#454747",
+                        "surface-container": "#f1edec",
+                        "on-surface-variant": "#444748",
+                        "primary-fixed-dim": "#c8c6c5",
+                        "tertiary": "#000000",
+                        "tertiary-fixed-dim": "#cac6c4",
+                        "on-tertiary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "outline": "#747878",
+                        "on-secondary-fixed": "#1a1c1c",
+                        "primary-container": "#1c1b1b",
+                        "surface-container-low": "#f7f3f2",
+                        "surface-dim": "#ddd9d8",
+                        "surface": "#fdf8f8",
+                        "secondary": "#5d5f5f",
+                        "primary": "#000000",
+                        "on-primary-fixed-variant": "#474746",
+                        "background": "#fdf8f8",
+                        "on-primary-fixed": "#1c1b1b",
+                        "secondary-fixed-dim": "#c6c6c6",
+                        "on-background": "#1c1b1b",
+                        "on-primary-container": "#858383",
+                        "tertiary-fixed": "#e6e2df"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "16px",
+                        "gutter": "24px",
+                        "grid_columns": "12",
+                        "base": "4px",
+                        "lg": "40px",
+                        "xl": "64px",
+                        "md": "24px",
+                        "xs": "8px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Space Grotesk"],
+                        "label-caps": ["Space Grotesk"],
+                        "h1": ["Epilogue"],
+                        "display": ["Epilogue"],
+                        "h2": ["Epilogue"],
+                        "body-md": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "500" }],
+                        "label-caps": ["12px", { "lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                        "h1": ["32px", { "lineHeight": "1.2", "fontWeight": "800" }],
+                        "display": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800" }],
+                        "h2": ["24px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .hard-shadow { box-shadow: 4px 4px 0px 0px var(--tw-colors-primary); }
+        .hard-shadow-sm { box-shadow: 2px 2px 0px 0px var(--tw-colors-primary); }
+        .hard-shadow-inner { box-shadow: inset 2px 2px 0px 0px rgba(0,0,0,0.3); }
+        
+        /* Subtle pixel texture overlay to meet grain requirement without images */
+        .bg-grain-overlay {
+            background-image: radial-gradient(var(--tw-colors-surface-variant) 1px, transparent 0);
+            background-size: 4px 4px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background min-h-screen text-on-background font-body-md bg-grain-overlay selection:bg-primary selection:text-on-primary">
+<header class="fixed top-0 w-full h-16 flex justify-between items-center px-6 z-50 bg-white dark:bg-zinc-900 border-b-4 border-zinc-900 dark:border-zinc-100 hidden md:flex">
+<div class="flex items-center gap-4 active:translate-y-1 transition-transform cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 p-2 border-2 border-transparent hover:border-zinc-900">
+<span class="material-symbols-outlined text-zinc-900 dark:text-zinc-100 font-black">terminal</span>
+<span class="text-2xl font-black italic tracking-tighter text-zinc-900 dark:text-zinc-100 uppercase font-['Epilogue']">PROD_SYS</span>
+</div>
+<div class="flex items-center gap-6">
+<nav class="flex items-center gap-6">
+<a class="font-['Epilogue'] font-bold uppercase tracking-tighter text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors px-3 py-1" href="#">TASKS</a>
+<a class="font-['Epilogue'] font-bold uppercase tracking-tighter text-zinc-900 dark:text-zinc-100 font-black hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors px-3 py-1 border-b-2 border-zinc-900" href="#">FLOW</a>
+<a class="font-['Epilogue'] font-bold uppercase tracking-tighter text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors px-3 py-1" href="#">STATS</a>
+<a class="font-['Epilogue'] font-bold uppercase tracking-tighter text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors px-3 py-1" href="#">SYNC</a>
+</nav>
+<span class="material-symbols-outlined text-zinc-900 dark:text-zinc-100 cursor-pointer active:translate-y-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 p-2 rounded-none border-2 border-transparent hover:border-zinc-900">settings</span>
+</div>
+</header>
+<main class="pt-24 pb-32 md:pt-32 px-4 md:px-gutter max-w-[1440px] mx-auto">
+<div class="mb-gutter border-b-4 border-primary pb-4">
+<h1 class="font-display text-display uppercase text-on-background tracking-tighter">System Limits</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-2 max-w-2xl">Configure behavioral constraints and focus enforcement parameters. Hardened rules require a full system restart to disable once engaged.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<section class="md:col-span-12 bg-surface-container-lowest border-4 border-primary hard-shadow p-sm md:p-gutter relative">
+<div class="absolute top-0 right-0 w-12 h-12 border-l-4 border-b-4 border-primary bg-surface-variant z-10 flex items-center justify-center">
+<div class="w-3 h-3 bg-primary"></div>
+</div>
+<h2 class="font-h2 text-h2 uppercase text-on-background border-b-4 border-primary pb-2 mb-6 flex items-center gap-3">
+<span class="material-symbols-outlined text-display" style="font-variation-settings: 'FILL' 1;">tune</span> 
+                    Enforcement Protocol
+                </h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<label class="cursor-pointer group block">
+<input class="peer sr-only" name="difficulty" type="radio" value="casual"/>
+<div class="h-full border-4 border-primary bg-surface p-6 hard-shadow peer-checked:bg-primary peer-checked:text-on-primary peer-checked:translate-x-[4px] peer-checked:translate-y-[4px] peer-checked:shadow-none transition-all duration-75 relative overflow-hidden">
+<div class="absolute top-0 right-0 w-8 h-8 bg-surface-variant border-l-4 border-b-4 border-primary opacity-0 peer-checked:opacity-100"></div>
+<div class="flex items-center justify-between mb-4 border-b-2 border-current pb-2">
+<span class="font-h2 text-h2 uppercase tracking-tight">Standard</span>
+<span class="material-symbols-outlined text-h1">check_circle</span>
+</div>
+<p class="font-body-md text-body-md opacity-90">Gentle warnings. Limits can be bypassed with a manual override button. Suitable for maintaining awareness.</p>
+</div>
+</label>
+<label class="cursor-pointer group block">
+<input checked="" class="peer sr-only" name="difficulty" type="radio" value="strict"/>
+<div class="h-full border-4 border-primary bg-surface p-6 hard-shadow peer-checked:bg-primary peer-checked:text-on-primary peer-checked:translate-x-[4px] peer-checked:translate-y-[4px] peer-checked:shadow-none transition-all duration-75 relative overflow-hidden">
+<div class="absolute top-0 right-0 w-8 h-8 bg-surface-variant border-l-4 border-b-4 border-primary opacity-0 peer-checked:opacity-100"></div>
+<div class="flex items-center justify-between mb-4 border-b-2 border-current pb-2">
+<span class="font-h2 text-h2 uppercase tracking-tight">Strict</span>
+<span class="material-symbols-outlined text-h1" style="font-variation-settings: 'FILL' 1;">gavel</span>
+</div>
+<p class="font-body-md text-body-md opacity-90">Hard limits. Overriding requires completing a timed 60-second breathing exercise. Recommended baseline.</p>
+</div>
+</label>
+<label class="cursor-pointer group block">
+<input class="peer sr-only" name="difficulty" type="radio" value="hardcore"/>
+<div class="h-full border-4 border-primary bg-surface p-6 hard-shadow peer-checked:bg-error peer-checked:text-on-error peer-checked:translate-x-[4px] peer-checked:translate-y-[4px] peer-checked:shadow-none transition-all duration-75 relative overflow-hidden">
+<div class="absolute top-0 right-0 w-8 h-8 bg-surface-variant border-l-4 border-b-4 border-primary opacity-0 peer-checked:opacity-100"></div>
+<div class="flex items-center justify-between mb-4 border-b-2 border-current pb-2">
+<span class="font-h2 text-h2 uppercase tracking-tight">Lockdown</span>
+<span class="material-symbols-outlined text-h1" style="font-variation-settings: 'FILL' 1;">lock</span>
+</div>
+<p class="font-body-md text-body-md opacity-90 font-bold">No overrides permitted. Once a session begins, rules cannot be altered until the scheduled expiration.</p>
+</div>
+</label>
+</div>
+</section>
+<section class="md:col-span-6 bg-surface-container-lowest border-4 border-primary hard-shadow flex flex-col">
+<div class="p-6 border-b-4 border-primary bg-surface">
+<h2 class="font-h2 text-h2 uppercase text-on-background flex items-center gap-3">
+<span class="material-symbols-outlined text-display">timer</span> App Budgets
+                    </h2>
+</div>
+<div class="p-6 flex-1 flex flex-col gap-4 bg-background">
+<div class="flex items-center justify-between p-4 border-4 border-primary bg-surface-container-lowest hover:bg-surface transition-colors group">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 border-4 border-primary bg-primary text-on-primary flex items-center justify-center hard-shadow-sm group-hover:shadow-none group-hover:translate-x-[2px] group-hover:translate-y-[2px] transition-all">
+<span class="material-symbols-outlined">play_circle</span>
+</div>
+<div>
+<span class="font-body-lg text-body-lg font-bold text-on-surface uppercase block leading-none mb-1">Stream Media</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Daily Limit</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<input class="w-14 border-4 border-primary bg-surface-container-lowest text-center font-h2 text-h2 text-on-surface focus:outline-none focus:bg-inverse-on-surface p-1 rounded-none" type="text" value="01"/>
+<span class="font-h2 text-h2 text-on-surface">:</span>
+<input class="w-14 border-4 border-primary bg-surface-container-lowest text-center font-h2 text-h2 text-on-surface focus:outline-none focus:bg-inverse-on-surface p-1 rounded-none" type="text" value="30"/>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 border-4 border-primary bg-surface-container-lowest hover:bg-surface transition-colors group">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 border-4 border-primary bg-surface-variant text-on-surface flex items-center justify-center hard-shadow-sm group-hover:shadow-none group-hover:translate-x-[2px] group-hover:translate-y-[2px] transition-all">
+<span class="material-symbols-outlined">chat</span>
+</div>
+<div>
+<span class="font-body-lg text-body-lg font-bold text-on-surface uppercase block leading-none mb-1">Messaging</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Daily Limit</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<input class="w-14 border-4 border-primary bg-surface-container-lowest text-center font-h2 text-h2 text-on-surface focus:outline-none focus:bg-inverse-on-surface p-1 rounded-none" type="text" value="00"/>
+<span class="font-h2 text-h2 text-on-surface">:</span>
+<input class="w-14 border-4 border-primary bg-surface-container-lowest text-center font-h2 text-h2 text-on-surface focus:outline-none focus:bg-inverse-on-surface p-1 rounded-none" type="text" value="45"/>
+</div>
+</div>
+<button class="mt-auto w-full py-4 border-4 border-primary bg-secondary-container text-on-surface font-label-caps text-label-caps uppercase hard-shadow active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all flex items-center justify-center gap-2 hover:bg-surface-variant">
+<span class="material-symbols-outlined">add</span> Append New Limit
+                    </button>
+</div>
+</section>
+<section class="md:col-span-6 bg-surface-container-lowest border-4 border-primary hard-shadow flex flex-col">
+<div class="p-6 border-b-4 border-primary bg-surface flex flex-col md:flex-row md:items-center justify-between gap-4">
+<h2 class="font-h2 text-h2 uppercase text-on-background flex items-center gap-3">
+<span class="material-symbols-outlined text-display">dns</span> Access Matrix
+                    </h2>
+<div class="flex border-4 border-primary bg-background p-1 hard-shadow-sm self-start">
+<button class="px-4 py-2 bg-primary text-on-primary font-label-caps text-label-caps uppercase border-2 border-transparent">Blocklist</button>
+<button class="px-4 py-2 bg-transparent text-on-surface font-label-caps text-label-caps uppercase border-2 border-transparent hover:border-primary border-dashed">Whitelist</button>
+</div>
+</div>
+<div class="p-6 flex-1 bg-background flex flex-col gap-6">
+<div class="flex gap-2">
+<input class="flex-1 border-4 border-primary bg-surface-container-lowest px-4 py-3 font-body-lg text-body-lg text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:bg-inverse-on-surface uppercase rounded-none" placeholder="INPUT DOMAIN OR APP ID..." type="text"/>
+<button class="px-6 py-3 bg-primary text-on-primary border-4 border-primary hard-shadow active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all flex items-center justify-center">
+<span class="material-symbols-outlined">keyboard_return</span>
+</button>
+</div>
+<div class="border-4 border-primary bg-surface overflow-hidden flex-1">
+<div class="h-full max-h-[220px] overflow-y-auto">
+<div class="flex items-center justify-between p-4 border-b-4 border-primary hover:bg-surface-variant transition-colors group bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9IiNjNGM3YzciLz48L3N2Zz4=')]">
+<div class="flex items-center gap-4 bg-surface px-2 py-1 border-2 border-primary">
+<div class="w-4 h-4 bg-primary"></div>
+<span class="font-body-lg text-body-lg font-bold text-on-surface uppercase tracking-wider">social-feed.net</span>
+</div>
+<button class="w-10 h-10 border-4 border-primary bg-error-container text-on-error-container flex items-center justify-center hard-shadow-sm active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="flex items-center justify-between p-4 border-b-4 border-primary hover:bg-surface-variant transition-colors group bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9IiNjNGM3YzciLz48L3N2Zz4=')]">
+<div class="flex items-center gap-4 bg-surface px-2 py-1 border-2 border-primary">
+<div class="w-4 h-4 bg-primary"></div>
+<span class="font-body-lg text-body-lg font-bold text-on-surface uppercase tracking-wider">news-portal.com</span>
+</div>
+<button class="w-10 h-10 border-4 border-primary bg-error-container text-on-error-container flex items-center justify-center hard-shadow-sm active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="flex items-center justify-between p-4 border-b-4 border-primary hover:bg-surface-variant transition-colors group bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9IiNjNGM3YzciLz48L3N2Zz4=')]">
+<div class="flex items-center gap-4 bg-surface px-2 py-1 border-2 border-primary">
+<div class="w-4 h-4 bg-primary"></div>
+<span class="font-body-lg text-body-lg font-bold text-on-surface uppercase tracking-wider">shop-endless.io</span>
+</div>
+<button class="w-10 h-10 border-4 border-primary bg-error-container text-on-error-container flex items-center justify-center hard-shadow-sm active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="md:col-span-12 bg-surface border-4 border-primary hard-shadow p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-8 mt-4">
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-display text-primary mt-1" style="font-variation-settings: 'FILL' 1;">warning</span>
+<div>
+<h3 class="font-h1 text-h1 uppercase text-on-background mb-2">Deep Work Analytics</h3>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-3xl">Enable aggressive tracking. Monitors cursor movement, tab switching frequency, and keystroke patterns to enforce flow state. Data is stored locally.</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer group flex-shrink-0">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-24 h-10 bg-surface-container-high border-4 border-primary hard-shadow-inner peer-focus:outline-none peer-checked:bg-primary transition-colors"></div>
+<div class="absolute left-1 top-1 w-8 h-8 bg-surface border-4 border-primary hard-shadow-sm peer-checked:translate-x-14 transition-transform duration-200 ease-in-out flex items-center justify-center">
+<div class="w-2 h-2 bg-primary"></div>
+</div>
+</label>
+</section>
+</div>
+</main>
+<nav class="fixed bottom-0 w-full h-20 flex justify-around items-stretch z-50 bg-white dark:bg-zinc-900 border-t-4 border-zinc-900 dark:border-zinc-100 md:hidden">
+<div class="flex flex-col items-center justify-center text-zinc-900 dark:text-zinc-100 opacity-60 w-full h-full cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors active:scale-95">
+<span class="material-symbols-outlined text-2xl mb-1">checklist</span>
+<span class="font-['Epilogue'] text-[10px] font-bold uppercase tracking-widest">TASKS</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 w-full h-full cursor-pointer active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-2xl mb-1" style="font-variation-settings: 'FILL' 1;">timer</span>
+<span class="font-['Epilogue'] text-[10px] font-bold uppercase tracking-widest">FLOW</span>
+</div>
+<div class="flex flex-col items-center justify-center text-zinc-900 dark:text-zinc-100 opacity-60 w-full h-full cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors active:scale-95">
+<span class="material-symbols-outlined text-2xl mb-1">bar_chart</span>
+<span class="font-['Epilogue'] text-[10px] font-bold uppercase tracking-widest">STATS</span>
+</div>
+<div class="flex flex-col items-center justify-center text-zinc-900 dark:text-zinc-100 opacity-60 w-full h-full cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors active:scale-95">
+<span class="material-symbols-outlined text-2xl mb-1">sync</span>
+<span class="font-['Epilogue'] text-[10px] font-bold uppercase tracking-widest">SYNC</span>
+</div>
+</nav>
+</body></html>

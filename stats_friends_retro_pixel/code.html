@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Stats &amp; Friends Leaderboard</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@0,700;0,800;0,900;1,900&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                            "inverse-primary": "#c8c6c5",
+                            "on-primary": "#ffffff",
+                            "surface-variant": "#e5e2e1",
+                            "surface-container-high": "#ebe7e6",
+                            "inverse-surface": "#313030",
+                            "on-error": "#ffffff",
+                            "on-surface": "#1c1b1b",
+                            "outline-variant": "#c4c7c7",
+                            "surface-container-lowest": "#ffffff",
+                            "primary-fixed": "#e5e2e1",
+                            "secondary-container": "#e2e2e2",
+                            "inverse-on-surface": "#f4f0ef",
+                            "on-tertiary-fixed": "#1c1b1a",
+                            "surface-tint": "#5f5e5e",
+                            "error-container": "#ffdad6",
+                            "on-tertiary-container": "#868382",
+                            "on-secondary-container": "#636465",
+                            "surface-container-highest": "#e5e2e1",
+                            "secondary-fixed": "#e2e2e2",
+                            "on-secondary": "#ffffff",
+                            "on-tertiary-fixed-variant": "#484645",
+                            "surface-bright": "#fdf8f8",
+                            "on-error-container": "#93000a",
+                            "tertiary-container": "#1c1b1a",
+                            "on-secondary-fixed-variant": "#454747",
+                            "surface-container": "#f1edec",
+                            "on-surface-variant": "#444748",
+                            "primary-fixed-dim": "#c8c6c5",
+                            "tertiary": "#000000",
+                            "tertiary-fixed-dim": "#cac6c4",
+                            "on-tertiary": "#ffffff",
+                            "error": "#ba1a1a",
+                            "outline": "#747878",
+                            "on-secondary-fixed": "#1a1c1c",
+                            "primary-container": "#1c1b1b",
+                            "surface-container-low": "#f7f3f2",
+                            "surface-dim": "#ddd9d8",
+                            "surface": "#fdf8f8",
+                            "secondary": "#5d5f5f",
+                            "primary": "#000000",
+                            "on-primary-fixed-variant": "#474746",
+                            "background": "#fdf8f8",
+                            "on-primary-fixed": "#1c1b1b",
+                            "secondary-fixed-dim": "#c6c6c6",
+                            "on-background": "#1c1b1b",
+                            "on-primary-container": "#858383",
+                            "tertiary-fixed": "#e6e2df"
+                    },
+                    "borderRadius": {
+                            "DEFAULT": "0.25rem",
+                            "lg": "0.5rem",
+                            "xl": "0.75rem",
+                            "full": "9999px"
+                    },
+                    "spacing": {
+                            "sm": "16px",
+                            "gutter": "24px",
+                            "grid_columns": "12",
+                            "base": "4px",
+                            "lg": "40px",
+                            "xl": "64px",
+                            "md": "24px",
+                            "xs": "8px"
+                    },
+                    "fontFamily": {
+                            "body-lg": ["Space Grotesk"],
+                            "label-caps": ["Space Grotesk"],
+                            "h1": ["Epilogue"],
+                            "display": ["Epilogue"],
+                            "h2": ["Epilogue"],
+                            "body-md": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                            "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "500"}],
+                            "label-caps": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                            "h1": ["32px", {"lineHeight": "1.2", "fontWeight": "800"}],
+                            "display": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800"}],
+                            "h2": ["24px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                            "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom Utility for Brutalist Shadows specific to this design system */
+        .hard-shadow {
+            box-shadow: 4px 4px 0px 0px #000000;
+        }
+        .hard-shadow-sm {
+            box-shadow: 2px 2px 0px 0px #000000;
+        }
+        .interactive-element:active {
+            box-shadow: 0px 0px 0px 0px #000000;
+            transform: translate(4px, 4px);
+        }
+        /* Checkerboard pattern for list hover */
+        .hover-checkerboard:hover {
+            background-image: linear-gradient(45deg, #e5e2e1 25%, transparent 25%, transparent 75%, #e5e2e1 75%, #e5e2e1), 
+                              linear-gradient(45deg, #e5e2e1 25%, transparent 25%, transparent 75%, #e5e2e1 75%, #e5e2e1);
+            background-size: 8px 8px;
+            background-position: 0 0, 4px 4px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md antialiased selection:bg-primary selection:text-on-primary">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full h-16 flex justify-between items-center px-6 z-50 bg-white dark:bg-zinc-900 border-b-4 border-zinc-900 dark:border-zinc-100 hidden md:flex">
+<button class="hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors active:translate-y-1 w-10 h-10 flex items-center justify-center border-2 border-transparent">
+<span class="material-symbols-outlined text-zinc-900 dark:text-zinc-100" style="font-variation-settings: 'FILL' 0;">terminal</span>
+</button>
+<div class="font-['Epilogue'] font-bold uppercase tracking-tighter text-2xl font-black italic text-zinc-900 dark:text-zinc-100">
+            PROD_SYS
+        </div>
+<button class="hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors active:translate-y-1 w-10 h-10 flex items-center justify-center border-2 border-transparent">
+<span class="material-symbols-outlined text-zinc-900 dark:text-zinc-100" style="font-variation-settings: 'FILL' 0;">settings</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-10 md:pt-24 pb-32 md:pb-16 px-6 md:px-gutter max-w-screen-xl mx-auto">
+<!-- Page Header -->
+<div class="mb-lg border-b-4 border-primary pb-base">
+<h1 class="font-display text-display uppercase text-primary">Telemetry</h1>
+<p class="font-body-lg text-body-lg text-secondary uppercase tracking-widest mt-2">Week 42 // Global Rank: 84</p>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Section 1: Weekly Focus Trends (Large Card) -->
+<section class="md:col-span-8 bg-surface border-2 border-primary hard-shadow flex flex-col p-6">
+<header class="flex justify-between items-end border-b-2 border-primary pb-4 mb-6">
+<h2 class="font-h2 text-h2 uppercase text-primary">Output Log</h2>
+<span class="font-label-caps text-label-caps bg-primary text-on-primary px-3 py-1">HRS / DAY</span>
+</header>
+<!-- Chart Area -->
+<div class="flex-1 flex items-end justify-between gap-2 md:gap-4 mt-auto h-64 relative">
+<!-- Grid Lines behind chart -->
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20">
+<div class="border-t-2 border-primary w-full h-0"></div>
+<div class="border-t-2 border-primary w-full h-0"></div>
+<div class="border-t-2 border-primary w-full h-0"></div>
+<div class="border-t-2 border-primary w-full h-0"></div>
+<div class="border-t-2 border-primary w-full h-0"></div>
+</div>
+<!-- Bars -->
+<div class="w-full flex flex-col items-center group">
+<div class="w-full bg-primary relative h-[40%] transition-transform origin-bottom group-hover:scale-y-105">
+<span class="absolute -top-8 left-1/2 -translate-x-1/2 font-label-caps text-label-caps bg-surface border-2 border-primary px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">3.2</span>
+</div>
+<span class="font-label-caps text-label-caps mt-2">MON</span>
+</div>
+<div class="w-full flex flex-col items-center group">
+<div class="w-full bg-primary relative h-[65%] transition-transform origin-bottom group-hover:scale-y-105">
+<span class="absolute -top-8 left-1/2 -translate-x-1/2 font-label-caps text-label-caps bg-surface border-2 border-primary px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">5.1</span>
+</div>
+<span class="font-label-caps text-label-caps mt-2">TUE</span>
+</div>
+<div class="w-full flex flex-col items-center group">
+<div class="w-full bg-primary relative h-[85%] transition-transform origin-bottom group-hover:scale-y-105">
+<span class="absolute -top-8 left-1/2 -translate-x-1/2 font-label-caps text-label-caps bg-surface border-2 border-primary px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">7.4</span>
+</div>
+<span class="font-label-caps text-label-caps mt-2">WED</span>
+</div>
+<div class="w-full flex flex-col items-center group">
+<div class="w-full bg-surface-variant border-2 border-primary relative h-[30%] transition-transform origin-bottom group-hover:scale-y-105" style="background-image: repeating-linear-gradient(45deg, #1c1b1b 0, #1c1b1b 2px, transparent 2px, transparent 6px);">
+<span class="absolute -top-8 left-1/2 -translate-x-1/2 font-label-caps text-label-caps bg-surface border-2 border-primary px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">2.1</span>
+</div>
+<span class="font-label-caps text-label-caps mt-2">THU</span>
+</div>
+<div class="w-full flex flex-col items-center group">
+<div class="w-full bg-primary relative h-[95%] transition-transform origin-bottom group-hover:scale-y-105">
+<span class="absolute -top-8 left-1/2 -translate-x-1/2 font-label-caps text-label-caps bg-surface border-2 border-primary px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">8.2</span>
+</div>
+<span class="font-label-caps text-label-caps mt-2 font-bold underline">FRI</span>
+</div>
+<div class="w-full flex flex-col items-center group">
+<div class="w-full bg-primary relative h-[20%] transition-transform origin-bottom group-hover:scale-y-105">
+<span class="absolute -top-8 left-1/2 -translate-x-1/2 font-label-caps text-label-caps bg-surface border-2 border-primary px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">1.5</span>
+</div>
+<span class="font-label-caps text-label-caps mt-2 text-outline">SAT</span>
+</div>
+<div class="w-full flex flex-col items-center group">
+<div class="w-full bg-primary relative h-[10%] transition-transform origin-bottom group-hover:scale-y-105">
+<span class="absolute -top-8 left-1/2 -translate-x-1/2 font-label-caps text-label-caps bg-surface border-2 border-primary px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">0.8</span>
+</div>
+<span class="font-label-caps text-label-caps mt-2 text-outline">SUN</span>
+</div>
+</div>
+</section>
+<!-- Side Column for Breakdowns & Stats -->
+<div class="md:col-span-4 flex flex-col gap-gutter">
+<!-- Section 2: Usage Breakdown -->
+<section class="bg-surface border-2 border-primary hard-shadow p-6 flex-1">
+<header class="border-b-2 border-primary pb-4 mb-6">
+<h2 class="font-h2 text-h2 uppercase text-primary">Vectors</h2>
+</header>
+<div class="flex flex-col gap-6">
+<!-- Category Item -->
+<div>
+<div class="flex justify-between items-center mb-2">
+<span class="font-body-md text-body-md font-bold uppercase">Deep Work</span>
+<span class="font-label-caps text-label-caps">64%</span>
+</div>
+<div class="h-4 w-full bg-surface-variant border-2 border-primary p-0.5">
+<div class="h-full bg-primary" style="width: 64%;"></div>
+</div>
+</div>
+<!-- Category Item -->
+<div>
+<div class="flex justify-between items-center mb-2">
+<span class="font-body-md text-body-md font-bold uppercase">Admin / Ops</span>
+<span class="font-label-caps text-label-caps">22%</span>
+</div>
+<div class="h-4 w-full bg-surface-variant border-2 border-primary p-0.5">
+<div class="h-full bg-primary" style="width: 22%; background-image: repeating-linear-gradient(45deg, #ffffff 0, #ffffff 2px, transparent 2px, transparent 6px);"></div>
+</div>
+</div>
+<!-- Category Item -->
+<div>
+<div class="flex justify-between items-center mb-2">
+<span class="font-body-md text-body-md font-bold uppercase">Learning</span>
+<span class="font-label-caps text-label-caps">14%</span>
+</div>
+<div class="h-4 w-full bg-surface-variant border-2 border-primary p-0.5">
+<div class="h-full bg-outline" style="width: 14%;"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Mini Stats Card -->
+<section class="bg-primary text-on-primary border-2 border-primary hard-shadow p-6 relative overflow-hidden">
+<!-- Decorative pseudo-texture -->
+<div class="absolute inset-0 pointer-events-none opacity-10" style="background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, #fff 2px, #fff 4px);"></div>
+<div class="relative z-10 flex justify-between items-center">
+<div>
+<span class="font-label-caps text-label-caps block text-inverse-primary mb-1">CURRENT STREAK</span>
+<span class="font-display text-display block leading-none">12<span class="text-h2 font-h2">d</span></span>
+</div>
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+</div>
+</section>
+</div>
+<!-- Section 3: 'Zen Circle' Leaderboard -->
+<section class="md:col-span-12 bg-surface border-2 border-primary hard-shadow mt-6 md:mt-0">
+<header class="p-6 border-b-4 border-primary flex justify-between items-center bg-surface-variant">
+<h2 class="font-h2 text-h2 uppercase text-primary">Zen Circle Sync</h2>
+<button class="font-label-caps text-label-caps border-2 border-primary bg-surface px-4 py-2 uppercase interactive-element hard-shadow-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">add</span> Invite
+                    </button>
+</header>
+<div class="flex flex-col">
+<!-- Leaderboard Item 1 (User) -->
+<div class="flex items-center p-4 border-b-2 border-primary hover-checkerboard transition-colors bg-primary text-on-primary">
+<div class="w-10 h-10 font-h2 text-h2 flex items-center justify-center mr-4">01</div>
+<div class="w-12 h-12 border-2 border-on-primary overflow-hidden shrink-0 bg-surface">
+<img alt="Avatar" class="w-full h-full object-cover grayscale mix-blend-multiply" data-alt="black and white portrait of a young man with a neutral expression against a plain background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDrIKv82CcOLYFc2iMEz6-Bh8SUt4VWoyUClPN1QcXpAxf7HtgXo6Mh-q4-FLarnC4h09xDIUpVufbLuKnnqSF1TeOXMoTOSSQTwMzYDpfTxWSnea-8O577D41YBUY49t0HdjDEYBBEYTCnrUH-ttPLm9R_T9fVbagJQhVoBg-IknKGvJBE0tG66yYtVmI7SFPMwz6TLmzQwIf8Lz97EVu5HEyDlPsFd8RkFLp9bTD07Bfp6lWY9yhOpc4CP_dmJF-1VQc8l4lfP2cM"/>
+</div>
+<div class="ml-4 flex-1">
+<h3 class="font-body-lg text-body-lg uppercase font-bold">You (Sys_Admin)</h3>
+<p class="font-label-caps text-label-caps text-inverse-primary">Status: Flowing</p>
+</div>
+<div class="text-right">
+<span class="font-h2 text-h2 block leading-none">28.5<span class="text-body-md font-body-md uppercase">h</span></span>
+<span class="font-label-caps text-label-caps text-inverse-primary">Score: 9420</span>
+</div>
+</div>
+<!-- Leaderboard Item 2 -->
+<div class="flex items-center p-4 border-b-2 border-primary hover-checkerboard transition-colors">
+<div class="w-10 h-10 font-h2 text-h2 flex items-center justify-center mr-4 text-outline">02</div>
+<div class="w-12 h-12 border-2 border-primary overflow-hidden shrink-0 bg-surface-variant">
+<img alt="Avatar" class="w-full h-full object-cover grayscale mix-blend-multiply" data-alt="high contrast black and white portrait of a woman looking directly at the camera with soft lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBsWYjGcnOOFGzXu-x-n7ZzOs2YdciqhHs6LumTUdf5S-b0iIpjIoWZTr0Y7WJMr9BHfHPNxpVJhLu6LFh1uOPoYDYppNx-PjDa55DaBfzcHVelnBPjGXNe4k6XgM99Jyf0pUDz0sDvOLXbER6YbOrfJx-buD19ztXto74H_mV1dXT235FTdovp95FBqABz34Pz6YtikDH0GF1eDCo8ABTV37I-HQ3mmNDHrTel1GBBssxqpzECws8tHxoAF9BLq8DgPbdFhZokx01Q"/>
+</div>
+<div class="ml-4 flex-1">
+<h3 class="font-body-lg text-body-lg uppercase font-bold">Node_Rider</h3>
+<p class="font-label-caps text-label-caps text-outline">Status: Offline</p>
+</div>
+<div class="text-right">
+<span class="font-h2 text-h2 block leading-none">24.1<span class="text-body-md font-body-md uppercase">h</span></span>
+<span class="font-label-caps text-label-caps text-outline">Score: 8105</span>
+</div>
+</div>
+<!-- Leaderboard Item 3 -->
+<div class="flex items-center p-4 border-b-2 border-primary hover-checkerboard transition-colors">
+<div class="w-10 h-10 font-h2 text-h2 flex items-center justify-center mr-4 text-outline">03</div>
+<div class="w-12 h-12 border-2 border-primary overflow-hidden shrink-0 bg-surface-variant">
+<div class="w-full h-full bg-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-outline">person</span>
+</div>
+</div>
+<div class="ml-4 flex-1">
+<h3 class="font-body-lg text-body-lg uppercase font-bold">Pixel_Ghost</h3>
+<p class="font-label-caps text-label-caps text-outline">Status: Idle</p>
+</div>
+<div class="text-right">
+<span class="font-h2 text-h2 block leading-none">18.0<span class="text-body-md font-body-md uppercase">h</span></span>
+<span class="font-label-caps text-label-caps text-outline">Score: 6022</span>
+</div>
+</div>
+<!-- Leaderboard Item 4 -->
+<div class="flex items-center p-4 hover-checkerboard transition-colors">
+<div class="w-10 h-10 font-h2 text-h2 flex items-center justify-center mr-4 text-outline">04</div>
+<div class="w-12 h-12 border-2 border-primary overflow-hidden shrink-0 bg-surface-variant">
+<img alt="Avatar" class="w-full h-full object-cover grayscale mix-blend-multiply" data-alt="gritty black and white close up portrait of a man with a slight stubble looking thoughtfully away" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDiyFkUkQk3CjLQuep7AAY2VJay1xrX1jY2-bsSfjUuvFzActzelCr2D3ocTQdV4tTkC6wtggGQt-unO5HrvWeZNkg1ATenjaIcfY4WImUVEZbiMfMRSK6D7pReM850rTpBAcXUPKruJfE5hr__GoyH_3Q2rRitpkTUAkg27eR6sYjqq40pnlINuC6ZaUb5w2bIJYiTt3U9HvnhbyWu546udRwyI-CUBo0LwttRB8onYoovFjdpQ1MjeBQTcA6CzXzV4MfkiRY0G3x3"/>
+</div>
+<div class="ml-4 flex-1">
+<h3 class="font-body-lg text-body-lg uppercase font-bold">Data_Punk</h3>
+<p class="font-label-caps text-label-caps text-outline">Status: Offline</p>
+</div>
+<div class="text-right">
+<span class="font-h2 text-h2 block leading-none opacity-50">9.2<span class="text-body-md font-body-md uppercase">h</span></span>
+<span class="font-label-caps text-label-caps text-outline opacity-50">Score: 3100</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) - STATS is Active -->
+<nav class="fixed bottom-0 w-full h-20 flex justify-around items-stretch z-50 bg-white dark:bg-zinc-900 border-t-4 border-zinc-900 dark:border-zinc-100 md:hidden">
+<button class="flex flex-col items-center justify-center text-zinc-900 dark:text-zinc-100 opacity-60 hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-transform flex-1">
+<span class="material-symbols-outlined">checklist</span>
+<span class="font-['Epilogue'] text-[10px] font-bold uppercase tracking-widest mt-1">TASKS</span>
+</button>
+<button class="flex flex-col items-center justify-center text-zinc-900 dark:text-zinc-100 opacity-60 hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-transform flex-1">
+<span class="material-symbols-outlined">timer</span>
+<span class="font-['Epilogue'] text-[10px] font-bold uppercase tracking-widest mt-1">FLOW</span>
+</button>
+<button class="flex flex-col items-center justify-center bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 w-full h-full active:scale-95 transition-transform flex-1">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bar_chart</span>
+<span class="font-['Epilogue'] text-[10px] font-bold uppercase tracking-widest mt-1">STATS</span>
+</button>
+<button class="flex flex-col items-center justify-center text-zinc-900 dark:text-zinc-100 opacity-60 hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-transform flex-1">
+<span class="material-symbols-outlined">sync</span>
+<span class="font-['Epilogue'] text-[10px] font-bold uppercase tracking-widest mt-1">SYNC</span>
+</button>
+</nav>
+</body></html>
