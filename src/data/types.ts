@@ -67,6 +67,7 @@ export type FocusScore = {
   completedTasks: number;
   bypasses: number;
   blockedAttempts: number;
+  completedAt?: string;
 };
 
 export type FriendSummary = {

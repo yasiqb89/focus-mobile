@@ -17,6 +17,7 @@ import {
 export type FocusState = {
   hydrated: boolean;
   onboarded: boolean;
+  userName: string;
   permissionStatus: PermissionStatus;
   tasks: Task[];
   activeSession: FocusSession;
@@ -30,6 +31,7 @@ export type FocusState = {
 type FocusAction =
   | { type: "hydrate"; snapshot: FocusState | null }
   | { type: "set-permission"; status: PermissionStatus }
+  | { type: "set-name"; name: string }
   | { type: "finish-onboarding" }
   | { type: "add-task"; title: string; estimateMinutes: number; category: string }
   | { type: "start-task"; taskId: string }
@@ -42,11 +44,13 @@ type FocusAction =
   | { type: "tick-minute" }
   | { type: "toggle-rule"; ruleId: string }
   | { type: "set-budget-used"; budgetId: string; usedMinutes: number }
+  | { type: "remove-target"; targetId: string }
   | { type: "intervention"; targetId: string; action: InterventionEvent["action"] };
 
 const initialState: FocusState = {
   hydrated: false,
   onboarded: false,
+  userName: "",
   permissionStatus: "unknown",
   tasks: initialTasks,
   activeSession: initialSession,
@@ -68,6 +72,12 @@ function reducer(state: FocusState, action: FocusAction): FocusState {
       return action.snapshot ? { ...action.snapshot, hydrated: true } : { ...state, hydrated: true };
     case "set-permission":
       return { ...state, permissionStatus: action.status };
+    case "set-name":
+      return {
+        ...state,
+        userName: action.name,
+        friends: state.friends.map((f) => (f.id === "you" ? { ...f, name: action.name || "You" } : f))
+      };
     case "finish-onboarding":
       return { ...state, onboarded: true };
     case "add-task": {
@@ -152,12 +162,22 @@ function reducer(state: FocusState, action: FocusAction): FocusState {
           ? { ...task, status: "completed" as const, completedAt: new Date().toISOString() }
           : task
       );
-      const score = calculateFocusScore(completedSession, tasks, state.interventions);
+      const score = {
+        ...calculateFocusScore(completedSession, tasks, state.interventions),
+        completedAt: new Date().toISOString()
+      };
+      const totalFocusMinutes = state.scores.reduce((sum, s) => sum + s.focusMinutes, 0) + score.focusMinutes;
+      const updatedFriends = state.friends.map((f) =>
+        f.id === "you"
+          ? { ...f, focusHours: Math.round((totalFocusMinutes / 60) * 10) / 10, score: score.score }
+          : f
+      );
       return {
         ...state,
         tasks,
         activeSession: completedSession,
-        scores: [score, ...state.scores.filter((item) => item.sessionId !== score.sessionId)]
+        scores: [score, ...state.scores.filter((item) => item.sessionId !== score.sessionId)],
+        friends: updatedFriends
       };
     }
     case "tick-minute":
@@ -182,6 +202,14 @@ function reducer(state: FocusState, action: FocusAction): FocusState {
         budgets: state.budgets.map((budget) =>
           budget.id === action.budgetId ? { ...budget, usedMinutes: action.usedMinutes } : budget
         )
+      };
+    case "remove-target":
+      return {
+        ...state,
+        rules: state.rules.map((rule) => ({
+          ...rule,
+          targetIds: rule.targetIds.filter((id) => id !== action.targetId)
+        }))
       };
     case "intervention": {
       const event: InterventionEvent = {
