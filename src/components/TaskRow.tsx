@@ -9,14 +9,16 @@ type TaskRowProps = {
   task: Task;
   onStart?: () => void;
   onComplete?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 };
 
-export function TaskRow({ task, onStart, onComplete }: TaskRowProps) {
+export function TaskRow({ task, onStart, onComplete, onEdit, onDelete }: TaskRowProps) {
   const completed = task.status === "completed";
   const active = task.status === "in-progress";
 
   return (
-    <View style={[styles.row, completed && styles.dim]}>
+    <View style={[styles.row, active && styles.activeRow, completed && styles.dim]}>
       <Pressable
         accessibilityRole="checkbox"
         accessibilityState={{ checked: completed }}
@@ -38,9 +40,29 @@ export function TaskRow({ task, onStart, onComplete }: TaskRowProps) {
           </PixelText>
         </View>
       </View>
-      <Pressable onPress={onStart} style={[styles.play, brutal.border, active && styles.playActive]}>
-        <MaterialIcons name={active ? "pause" : "play-arrow"} size={28} color={active ? colors.onPrimary : colors.primary} />
-      </Pressable>
+      <View style={styles.actions}>
+        {onEdit ? (
+          <Pressable accessibilityRole="button" onPress={onEdit} style={[styles.iconButton, brutal.border]}>
+            <MaterialIcons name="edit" size={19} color={colors.primary} />
+          </Pressable>
+        ) : null}
+        {onDelete ? (
+          <Pressable accessibilityRole="button" onPress={onDelete} style={[styles.iconButton, brutal.border]}>
+            <MaterialIcons name="delete-outline" size={19} color={colors.error} />
+          </Pressable>
+        ) : null}
+        <Pressable
+          accessibilityRole="button"
+          onPress={onStart}
+          style={[styles.play, brutal.border, active && styles.playActive]}
+        >
+          <MaterialIcons
+            name={active ? "pause" : "play-arrow"}
+            size={28}
+            color={active ? colors.onPrimary : colors.primary}
+          />
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -54,6 +76,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: spacing.sm,
     padding: spacing.sm
+  },
+  activeRow: {
+    backgroundColor: colors.surfaceLow
   },
   check: {
     alignItems: "center",
@@ -101,6 +126,17 @@ const styles = StyleSheet.create({
   },
   playActive: {
     backgroundColor: colors.primary
+  },
+  actions: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing.xs
+  },
+  iconButton: {
+    alignItems: "center",
+    height: 36,
+    justifyContent: "center",
+    width: 36
   },
   dim: {
     opacity: 0.48

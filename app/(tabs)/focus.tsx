@@ -1,241 +1,455 @@
 import { useRouter } from "expo-router";
-import React, { useEffect, useMemo } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React, { useEffect, useRef, useState } from "react";
+import { Alert, AppState, AppStateStatus, ScrollView, StyleSheet, TextInput, View } from "react-native";
+import Animated, { FadeIn, FadeInUp, FadeOut, Layout } from "react-native-reanimated";
 import { AppHeader } from "@/components/AppHeader";
+import { BottomSheet } from "@/components/BottomSheet";
+import { EmptyState } from "@/components/EmptyState";
 import { FocusRing } from "@/components/FocusRing";
 import { PixelButton } from "@/components/PixelButton";
 import { PixelCard } from "@/components/PixelCard";
 import { PixelText } from "@/components/PixelText";
 import { ProgressBar } from "@/components/ProgressBar";
+import { FixedScreen } from "@/components/Screen";
+import { StatusChip } from "@/components/StatusChip";
 import { TaskRow } from "@/components/TaskRow";
 import { restrictionProvider } from "@/data/focusRestrictionProvider";
-import { formatMinutes } from "@/data/scoring";
+import { elapsedFocusMinutes, formatMinutes, formatTimer } from "@/data/scoring";
 import { colors, layout, spacing } from "@/design/tokens";
 import { useFocusStore } from "@/state/FocusStore";
+
+const MIN_COMPLETE_SECONDS = 60;
+const BREAK_OPTIONS = [3, 5, 10];
+
+function protectionTone(status: string): "neutral" | "good" | "warn" | "danger" | "dark" {
+  if (status === "applied") return "good";
+  if (status === "simulated") return "warn";
+  if (status === "failed" || status === "permission-needed") return "danger";
+  if (status === "expired") return "neutral";
+  return "neutral";
+}
 
 export default function FocusScreen() {
   const router = useRouter();
   const { activeSession, budgets, currentScore, rules, tasks, dispatch } = useFocusStore();
+  const [breakSheetOpen, setBreakSheetOpen] = useState(false);
+  const [breakReason, setBreakReason] = useState("Clear my head");
+  const appliedSessionRef = useRef<string | null>(null);
 
   const activeTask = tasks.find((task) => activeSession.taskIds.includes(task.id));
-  const upNext = tasks.filter((task) => task.status === "todo");
-  const sessionTargets = useMemo(
-    () => rules.filter((rule) => rule.enabled).flatMap((rule) => rule.targetIds),
-    [rules]
-  );
-
-  const todoTasks = tasks.filter((t) => t.status !== "completed");
-  const activeIndex = activeTask ? todoTasks.findIndex((t) => t.id === activeTask.id) + 1 : 0;
-  const sessionLabel =
-    activeTask && activeIndex > 0
-      ? `Task ${activeIndex} of ${todoTasks.length}`
-      : todoTasks.length > 0
-        ? `${todoTasks.length} queued`
-        : "No tasks";
-
-  useEffect(() => {
-    if (activeSession.status !== "running") return;
-    const interval = setInterval(() => dispatch({ type: "tick-minute" }), 60000);
-    return () => clearInterval(interval);
-  }, [activeSession.status, dispatch]);
-
-  async function startSession() {
-    dispatch({ type: "start-session" });
-    await restrictionProvider.startFocusSession(activeSession, sessionTargets, activeSession.difficulty);
-  }
-
-  function completeSession() {
-    dispatch({ type: "complete-session" });
-    router.push("/session-complete");
-  }
-
+  const queuedTasks = tasks.filter((task) => task.status !== "completed");
+  const upNext = tasks.filter((task) => task.status === "todo").slice(0, 4);
+  const sessionTargets = rules.filter((rule) => rule.enabled).flatMap((rule) => rule.targetIds);
+  const plannedSeconds = activeSession.plannedMinutes * 60;
+  const elapsedSeconds = activeSession.elapsedSeconds;
   const isRunning = activeSession.status === "running";
   const isPaused = activeSession.status === "paused";
   const isActive = isRunning || isPaused;
+  const hasTasks = queuedTasks.length > 0;
+  const canComplete = elapsedSeconds >= MIN_COMPLETE_SECONDS;
+  const breakSeconds = activeSession.breakEndsAt
+    ? Math.max(0, Math.floor((new Date(activeSession.breakEndsAt).getTime() - Date.now()) / 1000))
+    : 0;
+
+  useEffect(() => {
+    if (!isRunning) return;
+    const interval = setInterval(() => dispatch({ type: "tick-second" }), 1000);
+    return () => clearInterval(interval);
+  }, [dispatch, isRunning]);
+
+  useEffect(() => {
+    function handleAppStateChange(nextState: AppStateStatus) {
+      if (nextState === "active") {
+        dispatch({ type: "reconcile-session" });
+      }
+    }
+
+    const sub = AppState.addEventListener("change", handleAppStateChange);
+    return () => sub.remove();
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!isRunning || activeSession.protectionStatus !== "permission-needed") return;
+    if (appliedSessionRef.current === activeSession.id) return;
+    appliedSessionRef.current = activeSession.id;
+    restrictionProvider
+      .startFocusSession(activeSession, sessionTargets, activeSession.difficulty)
+      .then((result) => {
+        dispatch({ type: "set-protection", status: result.protectionStatus, message: result.message });
+      })
+      .catch(() => {
+        dispatch({
+          type: "set-protection",
+          status: "failed",
+          message: "Focus protection could not be applied. Timer remains local."
+        });
+      });
+  }, [activeSession, dispatch, isRunning, sessionTargets]);
+
+  async function startSession() {
+    if (!hasTasks) {
+      router.push("/(tabs)/tasks");
+      return;
+    }
+
+    dispatch({ type: "start-session", taskId: activeTask?.id ?? upNext[0]?.id });
+  }
+
+  async function completeSession() {
+    if (!canComplete) {
+      Alert.alert("Keep Going", "Complete at least 1 minute before closing the session.");
+      return;
+    }
+    dispatch({ type: "complete-session" });
+    await restrictionProvider.stopFocusSession(activeSession.id);
+    router.push("/session-complete");
+  }
+
+  function confirmReset() {
+    if (activeSession.difficulty === "lockdown" && isActive) {
+      Alert.alert("Lockdown Active", "Reset is disabled while a lockdown session is active.");
+      return;
+    }
+    Alert.alert("Reset Session", "This clears the current timer and returns the task to your queue.", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Reset", style: "destructive", onPress: () => dispatch({ type: "reset-session" }) }
+    ]);
+  }
+
+  function startBreak(minutes: number) {
+    if (activeSession.difficulty === "lockdown") return;
+    dispatch({ type: "start-break", minutes, reason: breakReason });
+    setBreakSheetOpen(false);
+  }
+
+  if (!hasTasks && !isActive) {
+    return (
+      <FixedScreen>
+        <AppHeader title="FOCUS" subtitle="FLOW" />
+        <View style={styles.emptyWrap}>
+          <EmptyState
+            icon="checklist"
+            title="Build Your Queue"
+            body="Focus starts with one clear task. Add a task, choose a time, then return here for a protected session."
+            actionLabel="Add First Task"
+            onAction={() => router.push("/(tabs)/tasks")}
+          />
+        </View>
+      </FixedScreen>
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
-      {/* Sticky top: header + timer */}
-      <View style={styles.sticky}>
-        <AppHeader title="FOCUS" subtitle="FLOW" />
-        <PixelCard thick style={styles.hero}>
-          <PixelText variant="h1" uppercase numberOfLines={1}>
-            {activeTask?.title ?? (todoTasks.length === 0 ? "Add a task" : "Select a task")}
-          </PixelText>
-          <PixelText muted>{sessionLabel}</PixelText>
-          <FocusRing
-            minutes={activeSession.actualMinutes}
-            plannedMinutes={activeSession.plannedMinutes}
-          />
+    <FixedScreen>
+      <AppHeader title="FOCUS" subtitle="FLOW" />
+
+      <Animated.View entering={FadeInUp.duration(180)} layout={Layout.springify().damping(18)} style={styles.hero}>
+        <PixelCard thick style={styles.timerCard}>
+          <View style={styles.sessionTop}>
+            <View style={styles.sessionCopy}>
+              <StatusChip
+                label={activeSession.protectionStatus.replace("-", " ")}
+                tone={protectionTone(activeSession.protectionStatus)}
+                icon="shield"
+              />
+              <PixelText variant="h2" uppercase numberOfLines={2} style={styles.taskTitle}>
+                {activeTask?.title ?? "Ready to focus"}
+              </PixelText>
+              <PixelText muted numberOfLines={1}>
+                {activeTask ? `${activeTask.category} · ${formatMinutes(activeSession.plannedMinutes)}` : "Select a task"}
+              </PixelText>
+            </View>
+            <View style={styles.scoreChip}>
+              <PixelText variant="label" inverted uppercase>
+                Score
+              </PixelText>
+              <PixelText variant="h2" inverted>
+                {currentScore.score}
+              </PixelText>
+            </View>
+          </View>
+
+          <FocusRing compact elapsedSeconds={elapsedSeconds} plannedMinutes={activeSession.plannedMinutes} />
+
+          <View style={styles.timeGrid}>
+            <View style={styles.timeCell}>
+              <PixelText variant="label" muted uppercase>
+                Elapsed
+              </PixelText>
+              <PixelText variant="h2" style={styles.tabular}>
+                {formatTimer(elapsedSeconds)}
+              </PixelText>
+            </View>
+            <View style={styles.timeDivider} />
+            <View style={styles.timeCell}>
+              <PixelText variant="label" muted uppercase>
+                Remaining
+              </PixelText>
+              <PixelText variant="h2" style={styles.tabular}>
+                {formatTimer(Math.max(plannedSeconds - elapsedSeconds, 0))}
+              </PixelText>
+            </View>
+          </View>
+
+          <ProgressBar progress={plannedSeconds > 0 ? elapsedSeconds / plannedSeconds : 0} />
+
+          {activeSession.breakEndsAt ? (
+            <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.breakBanner}>
+              <PixelText variant="label" uppercase>
+                Break · {formatTimer(breakSeconds)}
+              </PixelText>
+              <PixelButton
+                label="Return"
+                icon="keyboard-return"
+                compact
+                onPress={() => {
+                  dispatch({ type: "end-break" });
+                  dispatch({ type: "start-session" });
+                }}
+              />
+            </Animated.View>
+          ) : null}
+
           <View style={styles.controls}>
             {isRunning ? (
               <PixelButton
                 label="Pause"
                 icon="pause"
                 variant="primary"
+                style={styles.mainControl}
                 onPress={() => dispatch({ type: "pause-session" })}
               />
             ) : (
               <PixelButton
-                label={isPaused ? "Resume" : "Start Session"}
+                label={isPaused ? "Resume" : "Start"}
                 icon="play-arrow"
                 variant="primary"
+                style={styles.mainControl}
                 onPress={startSession}
               />
             )}
-            {isActive && (
-              <PixelButton label="Complete" icon="check" onPress={completeSession} />
-            )}
-            {isActive && (
-              <PixelButton icon="restart-alt" compact onPress={() => dispatch({ type: "reset-session" })} />
-            )}
+            <PixelButton icon="free-breakfast" compact disabled={!isActive} onPress={() => setBreakSheetOpen(true)} />
+            <PixelButton icon="check" compact disabled={!canComplete} onPress={completeSession} />
+            <PixelButton icon="restart-alt" compact onPress={confirmReset} />
           </View>
         </PixelCard>
-      </View>
+      </Animated.View>
 
-      {/* Scrollable queue */}
-      <ScrollView
-        style={styles.queue}
-        contentContainerStyle={styles.queueContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Score metrics */}
-        <View style={styles.metrics}>
-          <PixelCard style={styles.metric}>
-            <PixelText variant="label" muted uppercase>
-              Focus Score
-            </PixelText>
-            <PixelText variant="display">{currentScore.score}</PixelText>
-          </PixelCard>
-          <PixelCard style={styles.metric}>
-            <PixelText variant="label" muted uppercase>
-              Focus Time
-            </PixelText>
-            <PixelText variant="h1">{formatMinutes(currentScore.focusMinutes)}</PixelText>
-          </PixelCard>
-        </View>
-
-        {/* Difficulty */}
-        <PixelCard>
+      <View style={styles.detailGrid}>
+        <PixelCard style={styles.detailCard}>
           <View style={styles.sectionHeader}>
-            <PixelText variant="h2" uppercase>
-              Difficulty
-            </PixelText>
             <PixelText variant="label" muted uppercase>
-              {activeSession.difficulty}
+              Protected
             </PixelText>
+            <PixelText variant="h2">{formatMinutes(elapsedFocusMinutes(elapsedSeconds))}</PixelText>
           </View>
           <View style={styles.segmented}>
             {(["standard", "strict", "lockdown"] as const).map((difficulty) => (
               <PixelButton
                 key={difficulty}
-                label={difficulty}
+                label={difficulty === "standard" ? "Std" : difficulty === "lockdown" ? "Lck" : "Str"}
                 variant={activeSession.difficulty === difficulty ? "primary" : "secondary"}
                 compact
+                disabled={isRunning && activeSession.difficulty === "lockdown"}
                 onPress={() => dispatch({ type: "set-difficulty", difficulty })}
               />
             ))}
           </View>
         </PixelCard>
 
-        {/* Up next */}
-        <PixelCard>
-          <View style={styles.sectionHeader}>
-            <PixelText variant="h2" uppercase>
-              Up Next
-            </PixelText>
-            <PixelText variant="label" muted uppercase>
-              {upNext.length} queued
-            </PixelText>
-          </View>
-          {upNext.length === 0 ? (
-            <PixelText muted>All tasks completed or no tasks added yet.</PixelText>
-          ) : (
-            upNext.map((task) => (
+        <PixelCard dark style={styles.detailCard}>
+          <PixelText variant="label" uppercase inverted>
+            Limits
+          </PixelText>
+          {budgets.slice(0, 2).map((budget) => (
+            <View key={budget.id} style={styles.budget}>
+              <View style={styles.sectionHeader}>
+                <PixelText inverted numberOfLines={1} style={styles.flex}>
+                  {budget.label}
+                </PixelText>
+                <PixelText variant="label" inverted>
+                  {budget.usedMinutes}/{budget.dailyLimitMinutes}m
+                </PixelText>
+              </View>
+              <ProgressBar progress={budget.usedMinutes / budget.dailyLimitMinutes} />
+            </View>
+          ))}
+        </PixelCard>
+      </View>
+
+      <PixelCard style={styles.queuePanel}>
+        <View style={styles.sectionHeader}>
+          <PixelText variant="h2" uppercase>
+            Up Next
+          </PixelText>
+          <PixelButton icon="add" compact onPress={() => router.push("/(tabs)/tasks")} />
+        </View>
+        {upNext.length === 0 ? (
+          <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.emptyPanel}>
+            <PixelText muted>All queued work is complete.</PixelText>
+          </Animated.View>
+        ) : (
+          <ScrollView style={styles.queueList} showsVerticalScrollIndicator={false}>
+            {upNext.map((task) => (
               <TaskRow
                 key={task.id}
                 task={task}
                 onStart={() => dispatch({ type: "start-task", taskId: task.id })}
               />
-            ))
-          )}
-        </PixelCard>
-
-        {/* Daily budgets */}
-        {budgets.length > 0 && (
-          <PixelCard dark>
-            <PixelText variant="label" uppercase inverted>
-              Daily Budgets
-            </PixelText>
-            {budgets.map((budget) => (
-              <View key={budget.id} style={styles.budget}>
-                <View style={styles.sectionHeader}>
-                  <PixelText inverted>{budget.label}</PixelText>
-                  <PixelText variant="label" inverted>
-                    {budget.usedMinutes}/{budget.dailyLimitMinutes}m
-                  </PixelText>
-                </View>
-                <ProgressBar progress={budget.usedMinutes / budget.dailyLimitMinutes} />
-              </View>
             ))}
-          </PixelCard>
+          </ScrollView>
         )}
-      </ScrollView>
-    </SafeAreaView>
+      </PixelCard>
+
+      <BottomSheet visible={breakSheetOpen} title="Intentional Break" onClose={() => setBreakSheetOpen(false)}>
+        <PixelText muted>
+          Breaks are timed and return you to focus automatically. Lockdown sessions do not allow breaks.
+        </PixelText>
+        <TextInput
+          value={breakReason}
+          onChangeText={setBreakReason}
+          placeholder="Why do you need this break?"
+          placeholderTextColor={colors.textMuted}
+          style={styles.input}
+        />
+        <View style={styles.breakOptions}>
+          {BREAK_OPTIONS.map((minutes) => (
+            <PixelButton
+              key={minutes}
+              label={`${minutes}m`}
+              icon="timer"
+              disabled={activeSession.difficulty === "lockdown"}
+              onPress={() => startBreak(minutes)}
+            />
+          ))}
+        </View>
+      </BottomSheet>
+    </FixedScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    backgroundColor: colors.background,
-    flex: 1
-  },
-  sticky: {
-    gap: spacing.md,
-    paddingHorizontal: spacing.sm,
-    paddingTop: spacing.md
+  emptyWrap: {
+    flex: 1,
+    justifyContent: "center"
   },
   hero: {
-    alignItems: "center",
-    gap: spacing.sm
+    flexShrink: 0
   },
-  controls: {
-    flexDirection: "row",
-    gap: spacing.sm,
-    justifyContent: "center",
-    width: "100%"
+  timerCard: {
+    gap: spacing.xs,
+    padding: spacing.sm
   },
-  queue: {
-    flex: 1
-  },
-  queueContent: {
-    gap: spacing.md,
-    paddingBottom: layout.bottomNavHeight + spacing.lg,
-    paddingHorizontal: spacing.sm,
-    paddingTop: spacing.md
-  },
-  metrics: {
-    flexDirection: "row",
-    gap: spacing.md
-  },
-  metric: {
-    flex: 1,
-    minHeight: 120
-  },
-  sectionHeader: {
-    alignItems: "center",
+  sessionTop: {
+    alignItems: "flex-start",
     flexDirection: "row",
     gap: spacing.sm,
     justifyContent: "space-between"
   },
-  segmented: {
+  sessionCopy: {
+    flex: 1,
+    gap: spacing.base
+  },
+  taskTitle: {
+    fontSize: 21,
+    lineHeight: 25
+  },
+  scoreChip: {
+    alignItems: "center",
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+    borderWidth: layout.border,
+    minWidth: 64,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.base
+  },
+  timeGrid: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing.sm,
+    justifyContent: "center"
+  },
+  timeCell: {
+    alignItems: "center",
+    flex: 1
+  },
+  timeDivider: {
+    backgroundColor: colors.primary,
+    height: 34,
+    width: 2
+  },
+  tabular: {
+    fontVariant: ["tabular-nums"]
+  },
+  breakBanner: {
+    alignItems: "center",
+    backgroundColor: colors.warningContainer,
+    borderColor: colors.primary,
+    borderWidth: layout.border,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: spacing.xs
+  },
+  controls: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing.xs
+  },
+  mainControl: {
+    flex: 1
+  },
+  detailGrid: {
+    flexDirection: "row",
+    gap: spacing.sm
+  },
+  detailCard: {
+    flex: 1,
+    gap: spacing.xs,
+    minHeight: 96,
+    padding: spacing.xs
+  },
+  sectionHeader: {
+    alignItems: "center",
     flexDirection: "row",
     gap: spacing.xs,
-    marginTop: spacing.sm
+    justifyContent: "space-between"
+  },
+  segmented: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.base
   },
   budget: {
+    gap: 3,
+    marginTop: spacing.xs
+  },
+  queuePanel: {
+    flex: 1,
     gap: spacing.xs,
-    marginTop: spacing.sm
+    minHeight: 0,
+    padding: spacing.xs
+  },
+  queueList: {
+    minHeight: 0
+  },
+  emptyPanel: {
+    borderColor: colors.outline,
+    borderWidth: 1,
+    padding: spacing.sm
+  },
+  input: {
+    borderColor: colors.primary,
+    borderWidth: layout.border,
+    color: colors.text,
+    fontSize: 16,
+    minHeight: 52,
+    paddingHorizontal: spacing.sm
+  },
+  breakOptions: {
+    flexDirection: "row",
+    gap: spacing.xs
+  },
+  flex: {
+    flex: 1
   }
 });

@@ -12,7 +12,11 @@ export const colors = {
   primary: "#000000",
   onPrimary: "#ffffff",
   error: "#ba1a1a",
-  errorContainer: "#ffdad6"
+  errorContainer: "#ffdad6",
+  warning: "#6b4f00",
+  warningContainer: "#fff1bf",
+  success: "#0f5f3d",
+  successContainer: "#dff7e8"
 };
 
 export const spacing = {
@@ -26,20 +30,20 @@ export const spacing = {
 
 export const typography = {
   display: {
-    fontSize: 48,
-    lineHeight: 52,
+    fontSize: 44,
+    lineHeight: 48,
     fontWeight: "900" as const,
-    letterSpacing: -1
+    letterSpacing: 0
   },
   h1: {
-    fontSize: 32,
-    lineHeight: 38,
+    fontSize: 30,
+    lineHeight: 36,
     fontWeight: "900" as const,
-    letterSpacing: -0.5
+    letterSpacing: 0
   },
   h2: {
-    fontSize: 24,
-    lineHeight: 29,
+    fontSize: 22,
+    lineHeight: 27,
     fontWeight: "800" as const
   },
   body: {
@@ -51,7 +55,7 @@ export const typography = {
     fontSize: 11,
     lineHeight: 13,
     fontWeight: "800" as const,
-    letterSpacing: 1.6
+    letterSpacing: 0
   }
 };
 

@@ -7,6 +7,7 @@ import { colors, layout, typography } from "@/design/tokens";
 type IconName = keyof typeof MaterialIcons.glyphMap;
 
 const iconForRoute: Record<string, IconName> = {
+  home: "home-filled",
   tasks: "checklist",
   focus: "timer",
   blocks: "block",
@@ -16,7 +17,7 @@ const iconForRoute: Record<string, IconName> = {
 export default function TabLayout() {
   return (
     <Tabs
-      initialRouteName="focus"
+      initialRouteName="home"
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: colors.onPrimary,
@@ -31,10 +32,11 @@ export default function TabLayout() {
         )
       })}
     >
-      <Tabs.Screen name="tasks" options={{ title: "TASKS" }} />
-      <Tabs.Screen name="focus" options={{ title: "FOCUS" }} />
+      <Tabs.Screen name="home" options={{ title: "TODAY" }} />
       <Tabs.Screen name="blocks" options={{ title: "BLOCKS" }} />
-      <Tabs.Screen name="stats" options={{ title: "STATS" }} />
+      <Tabs.Screen name="focus" options={{ title: "FOCUS" }} />
+      <Tabs.Screen name="stats" options={{ title: "PROFILE" }} />
+      <Tabs.Screen name="tasks" options={{ href: null, title: "TASKS" }} />
     </Tabs>
   );
 }

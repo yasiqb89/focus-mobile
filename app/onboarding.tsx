@@ -15,25 +15,32 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { PixelButton } from "@/components/PixelButton";
 import { PixelCard } from "@/components/PixelCard";
 import { PixelText } from "@/components/PixelText";
+import { StatusChip } from "@/components/StatusChip";
 import { WheelPicker } from "@/components/WheelPicker";
 import { restrictionProvider } from "@/data/focusRestrictionProvider";
+import { Difficulty } from "@/data/types";
 import { brutal, colors, layout, spacing, typography } from "@/design/tokens";
 import { useFocusStore } from "@/state/FocusStore";
 
 const ESTIMATE_VALUES = [5, 10, 15, 20, 25, 30, 40, 45, 60, 90, 120];
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 5;
 
 type PendingTask = { title: string; estimateMinutes: number };
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const { dispatch, permissionStatus } = useFocusStore();
+  const { dispatch, permissionStatus, targets } = useFocusStore();
 
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
+  const [goal, setGoal] = useState("Work without checking feeds");
   const [taskTitle, setTaskTitle] = useState("");
   const [taskMinutes, setTaskMinutes] = useState(25);
   const [pendingTasks, setPendingTasks] = useState<PendingTask[]>([]);
+  const [difficulty, setDifficulty] = useState<Difficulty>("strict");
+  const [selectedTargets, setSelectedTargets] = useState<string[]>(targets.slice(0, 3).map((target) => target.id));
+  const [workStart, setWorkStart] = useState("09:00");
+  const [workEnd, setWorkEnd] = useState("12:00");
   const [loading, setLoading] = useState(false);
   const progressAnim = useRef(new Animated.Value(1 / TOTAL_STEPS)).current;
 
@@ -41,7 +48,7 @@ export default function OnboardingScreen() {
     setStep(next);
     Animated.timing(progressAnim, {
       toValue: next / TOTAL_STEPS,
-      duration: 280,
+      duration: 260,
       useNativeDriver: false
     }).start();
   }
@@ -53,24 +60,40 @@ export default function OnboardingScreen() {
     setTaskMinutes(25);
   }
 
-  function removeTask(index: number) {
-    setPendingTasks((prev) => prev.filter((_, i) => i !== index));
-  }
-
   async function requestAccess() {
     setLoading(true);
-    const status = await restrictionProvider.requestPermissions();
-    dispatch({ type: "set-permission", status });
-    setLoading(false);
+    try {
+      const status = await restrictionProvider.requestPermissions();
+      dispatch({ type: "set-permission", status });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function toggleTarget(id: string) {
+    setSelectedTargets((current) =>
+      current.includes(id) ? current.filter((targetId) => targetId !== id) : [...current, id]
+    );
   }
 
   function finish() {
     if (name.trim()) dispatch({ type: "set-name", name: name.trim() });
+    dispatch({ type: "set-difficulty", difficulty });
     pendingTasks.forEach((task) =>
       dispatch({ type: "add-task", title: task.title, estimateMinutes: task.estimateMinutes, category: "Focus" })
     );
+    if (selectedTargets.length) {
+      dispatch({
+        type: "add-rule",
+        name: "Daily Focus Routine",
+        mode: "focus",
+        targetIds: selectedTargets,
+        startTime: workStart,
+        endTime: workEnd
+      });
+    }
     dispatch({ type: "finish-onboarding" });
-    router.replace("/(tabs)/focus");
+    router.replace("/home" as never);
   }
 
   const progressWidth = progressAnim.interpolate({
@@ -80,199 +103,136 @@ export default function OnboardingScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "left", "right"]}>
-      {/* Progress bar */}
       <View style={styles.progressTrack}>
         <Animated.View style={[styles.progressFill, { width: progressWidth }]} />
       </View>
-
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Step indicators */}
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.stepRow}>
             {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
-              <View
-                key={i}
-                style={[styles.stepDot, i + 1 === step && styles.stepDotActive, i + 1 < step && styles.stepDotDone]}
-              />
+              <View key={i} style={[styles.stepDot, i + 1 === step && styles.stepDotActive, i + 1 < step && styles.stepDotDone]} />
             ))}
             <PixelText variant="label" muted uppercase>
               {step} of {TOTAL_STEPS}
             </PixelText>
           </View>
 
-          {/* ─── Step 1: Name ─── */}
-          {step === 1 && (
+          {step === 1 ? (
             <View style={styles.stepContent}>
               <View style={styles.hero}>
-                <MaterialIcons name="terminal" size={32} color={colors.primary} />
+                <MaterialIcons name="shield" size={32} color={colors.primary} />
                 <PixelText variant="display" uppercase>
                   Focus
                 </PixelText>
               </View>
               <View style={styles.heading}>
                 <PixelText variant="h1" uppercase>
-                  Hello.
+                  Set Your Intent.
                 </PixelText>
-                <PixelText muted>What should we call you?</PixelText>
+                <PixelText muted>A premium focus app starts by knowing what you are protecting.</PixelText>
               </View>
               <View style={styles.inputWrap}>
-                <TextInput
-                  value={name}
-                  onChangeText={setName}
-                  placeholder="Your name"
-                  placeholderTextColor={colors.textMuted}
-                  style={styles.input}
-                  autoFocus
-                  returnKeyType="next"
-                  onSubmitEditing={() => advanceTo(2)}
-                />
+                <TextInput value={name} onChangeText={setName} placeholder="Your name" placeholderTextColor={colors.textMuted} style={styles.input} />
               </View>
-              <PixelButton
-                label="Continue"
-                icon="arrow-forward"
-                variant="primary"
-                onPress={() => advanceTo(2)}
-              />
+              <View style={styles.goalGrid}>
+                {["Work without checking feeds", "Study with fewer loops", "Protect sleep", "Use my phone intentionally"].map((item) => (
+                  <PixelButton
+                    key={item}
+                    label={item}
+                    variant={goal === item ? "primary" : "secondary"}
+                    onPress={() => setGoal(item)}
+                    style={styles.goalButton}
+                  />
+                ))}
+              </View>
+              <PixelButton label="Continue" icon="arrow-forward" variant="primary" onPress={() => advanceTo(2)} />
             </View>
-          )}
+          ) : null}
 
-          {/* ─── Step 2: Tasks ─── */}
-          {step === 2 && (
+          {step === 2 ? (
             <View style={styles.stepContent}>
               <View style={styles.heading}>
                 <PixelText variant="h1" uppercase>
-                  Build your queue.
+                  Build Queue.
                 </PixelText>
-                <PixelText muted>What are you working on{name ? `, ${name}` : ""}?</PixelText>
+                <PixelText muted>Add the first task your focus session will protect.</PixelText>
               </View>
-
               <View style={styles.inputWrap}>
-                <TextInput
-                  value={taskTitle}
-                  onChangeText={setTaskTitle}
-                  placeholder="Task name..."
-                  placeholderTextColor={colors.textMuted}
-                  style={styles.input}
-                  returnKeyType="done"
-                  onSubmitEditing={addTask}
-                />
+                <TextInput value={taskTitle} onChangeText={setTaskTitle} placeholder="Task name..." placeholderTextColor={colors.textMuted} style={styles.input} returnKeyType="done" onSubmitEditing={addTask} />
               </View>
-
-              {/* Watch-style time picker */}
               <PixelCard>
                 <View style={styles.pickerHeader}>
                   <PixelText variant="label" muted uppercase>
                     Estimated Time
                   </PixelText>
-                  <View style={styles.pickerValue}>
-                    <PixelText variant="h2">{taskMinutes}m</PixelText>
-                  </View>
+                  <StatusChip label={`${taskMinutes}m`} tone="dark" />
                 </View>
-                <WheelPicker
-                  values={ESTIMATE_VALUES}
-                  selected={taskMinutes}
-                  onSelect={setTaskMinutes}
-                />
+                <WheelPicker values={ESTIMATE_VALUES} selected={taskMinutes} onSelect={setTaskMinutes} />
               </PixelCard>
-
               <PixelButton label="Add Task" icon="add" onPress={addTask} />
-
-              {/* Added tasks list */}
-              {pendingTasks.length > 0 && (
+              {pendingTasks.length ? (
                 <View style={styles.taskList}>
-                  <View style={styles.taskListHeader}>
-                    <PixelText variant="label" uppercase muted>
-                      Queue
-                    </PixelText>
-                    <View style={[styles.badge, brutal.border]}>
-                      <PixelText variant="label" uppercase>
-                        {pendingTasks.length}
-                      </PixelText>
-                    </View>
-                  </View>
                   {pendingTasks.map((task, i) => (
-                    <View key={i} style={styles.taskItem}>
+                    <View key={`${task.title}-${i}`} style={styles.taskItem}>
                       <View style={styles.taskItemDot} />
                       <PixelText style={styles.taskItemTitle}>{task.title}</PixelText>
                       <PixelText variant="label" muted>
                         {task.estimateMinutes}m
                       </PixelText>
-                      <TouchableOpacity onPress={() => removeTask(i)} style={styles.taskRemove}>
+                      <TouchableOpacity onPress={() => setPendingTasks((prev) => prev.filter((_, index) => index !== i))} style={styles.taskRemove}>
                         <MaterialIcons name="close" size={16} color={colors.textMuted} />
                       </TouchableOpacity>
                     </View>
                   ))}
                 </View>
-              )}
-
+              ) : null}
               <View style={styles.stepNav}>
                 <PixelButton label="Continue" icon="arrow-forward" variant="primary" onPress={() => advanceTo(3)} />
-                {pendingTasks.length === 0 && (
-                  <PixelButton label="Skip" variant="secondary" onPress={() => advanceTo(3)} />
-                )}
+                {!pendingTasks.length ? <PixelButton label="Skip" variant="secondary" onPress={() => advanceTo(3)} /> : null}
               </View>
             </View>
-          )}
+          ) : null}
 
-          {/* ─── Step 3: Ready ─── */}
-          {step === 3 && (
+          {step === 3 ? (
             <View style={styles.stepContent}>
               <View style={styles.heading}>
                 <PixelText variant="h1" uppercase>
-                  {name ? `You're set, ${name}.` : "You're set."}
+                  Choose Protection.
                 </PixelText>
-                <PixelText muted>
-                  Focus will turn your tasks into timed work blocks and get distractions out of the way.
-                </PixelText>
+                <PixelText muted>Pick the friction level and apps/sites that usually pull you away.</PixelText>
               </View>
-
-              {/* Summary */}
-              <PixelCard dark>
-                <View style={styles.summaryRow}>
-                  <PixelText variant="label" uppercase inverted>
-                    Tasks queued
+              <View style={styles.goalGrid}>
+                {(["standard", "strict", "lockdown"] as const).map((item) => (
+                  <PixelButton key={item} label={item} variant={difficulty === item ? "primary" : "secondary"} onPress={() => setDifficulty(item)} style={styles.goalButton} />
+                ))}
+              </View>
+              <PixelCard>
+                <View style={styles.pickerHeader}>
+                  <PixelText variant="h2" uppercase>
+                    Targets
                   </PixelText>
-                  <PixelText variant="h2" inverted>
-                    {pendingTasks.length}
-                  </PixelText>
+                  <StatusChip label={`${selectedTargets.length} selected`} tone="neutral" />
                 </View>
-                {pendingTasks.length > 0 && (
-                  <>
-                    <View style={styles.summaryDivider} />
-                    {pendingTasks.slice(0, 3).map((task, i) => (
-                      <View key={i} style={styles.summaryTask}>
-                        <View style={styles.summaryDot} />
-                        <PixelText inverted style={styles.summaryTaskTitle}>
-                          {task.title}
-                        </PixelText>
-                        <PixelText variant="label" inverted>
-                          {task.estimateMinutes}m
-                        </PixelText>
-                      </View>
-                    ))}
-                    {pendingTasks.length > 3 && (
-                      <PixelText variant="label" muted style={styles.summaryMore}>
-                        +{pendingTasks.length - 3} more
-                      </PixelText>
-                    )}
-                  </>
-                )}
+                <View style={styles.targetGrid}>
+                  {targets.map((target) => (
+                    <PixelButton
+                      key={target.id}
+                      label={target.label}
+                      icon={selectedTargets.includes(target.id) ? "check" : "add"}
+                      variant={selectedTargets.includes(target.id) ? "primary" : "secondary"}
+                      compact
+                      onPress={() => toggleTarget(target.id)}
+                      style={styles.targetButton}
+                    />
+                  ))}
+                </View>
               </PixelCard>
-
-              {/* Optional permission */}
               <PixelCard>
                 <PixelText variant="h2" uppercase>
                   Native Access
                 </PixelText>
                 <PixelText muted style={styles.permCopy}>
-                  Optional. Grants Focus screen-time controls for real app blocking on device.
+                  Optional for this local beta. Required later for true app blocking on device.
                 </PixelText>
                 <View style={styles.permStatus}>
                   <PixelText variant="label" uppercase muted>
@@ -282,17 +242,88 @@ export default function OnboardingScreen() {
                     {permissionStatus}
                   </PixelText>
                 </View>
-                <PixelButton
-                  label={loading ? "Requesting…" : "Request Access"}
-                  icon="verified-user"
-                  variant="secondary"
-                  onPress={requestAccess}
-                />
+                <PixelButton label={loading ? "Requesting..." : "Request Access"} icon="verified-user" onPress={requestAccess} />
               </PixelCard>
-
-              <PixelButton label="Start Focusing" icon="arrow-forward" variant="primary" onPress={finish} />
+              <PixelButton label="Continue" icon="arrow-forward" variant="primary" onPress={() => advanceTo(4)} />
             </View>
-          )}
+          ) : null}
+
+          {step === 4 ? (
+            <View style={styles.stepContent}>
+              <View style={styles.heading}>
+                <PixelText variant="h1" uppercase>
+                  Schedule Routine.
+                </PixelText>
+                <PixelText muted>Set a default work block. You can refine it from Blocks.</PixelText>
+              </View>
+              <View style={styles.timeGrid}>
+                <View style={styles.timeBox}>
+                  <PixelText variant="label" muted uppercase>
+                    Start
+                  </PixelText>
+                  <TextInput value={workStart} onChangeText={setWorkStart} style={styles.timeInput} placeholder="09:00" placeholderTextColor={colors.textMuted} />
+                </View>
+                <View style={styles.timeBox}>
+                  <PixelText variant="label" muted uppercase>
+                    End
+                  </PixelText>
+                  <TextInput value={workEnd} onChangeText={setWorkEnd} style={styles.timeInput} placeholder="12:00" placeholderTextColor={colors.textMuted} />
+                </View>
+              </View>
+              <PixelCard dark>
+                <PixelText variant="label" uppercase inverted>
+                  Goal
+                </PixelText>
+                <PixelText variant="h2" inverted>
+                  {goal}
+                </PixelText>
+                <PixelText inverted>
+                  {workStart}-{workEnd} · {difficulty} · {selectedTargets.length} targets
+                </PixelText>
+              </PixelCard>
+              <PixelButton label="Continue" icon="arrow-forward" variant="primary" onPress={() => advanceTo(5)} />
+            </View>
+          ) : null}
+
+          {step === 5 ? (
+            <View style={styles.stepContent}>
+              <View style={styles.heading}>
+                <PixelText variant="h1" uppercase>
+                  Ready.
+                </PixelText>
+                <PixelText muted>Your local focus OS is configured. Start from Today or jump into Focus.</PixelText>
+              </View>
+              <PixelCard dark>
+                <View style={styles.summaryRow}>
+                  <PixelText variant="label" uppercase inverted>
+                    Tasks queued
+                  </PixelText>
+                  <PixelText variant="h2" inverted>
+                    {pendingTasks.length}
+                  </PixelText>
+                </View>
+                <View style={styles.summaryDivider} />
+                <View style={styles.summaryRow}>
+                  <PixelText variant="label" uppercase inverted>
+                    Protection
+                  </PixelText>
+                  <PixelText variant="h2" inverted>
+                    {difficulty}
+                  </PixelText>
+                </View>
+                <View style={styles.summaryDivider} />
+                <View style={styles.summaryRow}>
+                  <PixelText variant="label" uppercase inverted>
+                    Targets
+                  </PixelText>
+                  <PixelText variant="h2" inverted>
+                    {selectedTargets.length}
+                  </PixelText>
+                </View>
+              </PixelCard>
+              <PixelButton label="Enter Focus" icon="arrow-forward" variant="primary" onPress={finish} />
+            </View>
+          ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -362,35 +393,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
     paddingVertical: spacing.sm
   },
+  goalGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.xs
+  },
+  goalButton: {
+    flexGrow: 1
+  },
   pickerHeader: {
     alignItems: "center",
     flexDirection: "row",
+    gap: spacing.sm,
     justifyContent: "space-between",
     marginBottom: spacing.sm
-  },
-  pickerValue: {
-    backgroundColor: colors.surfaceMid,
-    borderColor: colors.primary,
-    borderWidth: layout.border,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs
   },
   taskList: {
     borderColor: colors.primary,
     borderWidth: layout.border,
     gap: spacing.xs,
     padding: spacing.sm
-  },
-  taskListHeader: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing.xs,
-    justifyContent: "space-between",
-    marginBottom: spacing.xs
-  },
-  badge: {
-    paddingHorizontal: spacing.xs,
-    paddingVertical: spacing.base
   },
   taskItem: {
     alignItems: "center",
@@ -415,34 +437,13 @@ const styles = StyleSheet.create({
   stepNav: {
     gap: spacing.xs
   },
-  summaryRow: {
-    alignItems: "center",
+  targetGrid: {
     flexDirection: "row",
-    justifyContent: "space-between"
+    flexWrap: "wrap",
+    gap: spacing.xs
   },
-  summaryDivider: {
-    backgroundColor: colors.onPrimary,
-    height: 1,
-    marginVertical: spacing.sm,
-    opacity: 0.2
-  },
-  summaryTask: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing.sm,
-    paddingVertical: spacing.base
-  },
-  summaryDot: {
-    backgroundColor: colors.onPrimary,
-    height: 6,
-    opacity: 0.6,
-    width: 6
-  },
-  summaryTaskTitle: {
-    flex: 1
-  },
-  summaryMore: {
-    marginTop: spacing.xs
+  targetButton: {
+    maxWidth: "100%"
   },
   permCopy: {
     marginVertical: spacing.xs
@@ -455,5 +456,31 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs
+  },
+  timeGrid: {
+    flexDirection: "row",
+    gap: spacing.sm
+  },
+  timeBox: {
+    borderColor: colors.primary,
+    borderWidth: layout.border,
+    flex: 1,
+    padding: spacing.sm
+  },
+  timeInput: {
+    ...typography.h2,
+    color: colors.text,
+    minHeight: 52
+  },
+  summaryRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between"
+  },
+  summaryDivider: {
+    backgroundColor: colors.onPrimary,
+    height: 1,
+    marginVertical: spacing.sm,
+    opacity: 0.2
   }
 });

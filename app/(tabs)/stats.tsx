@@ -1,14 +1,17 @@
+import { useRouter } from "expo-router";
 import React, { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
+import Animated, { FadeInUp, Layout } from "react-native-reanimated";
 import { AppHeader } from "@/components/AppHeader";
 import { PixelButton } from "@/components/PixelButton";
 import { PixelCard } from "@/components/PixelCard";
 import { PixelText } from "@/components/PixelText";
 import { ProgressBar } from "@/components/ProgressBar";
 import { Screen } from "@/components/Screen";
+import { StatusChip } from "@/components/StatusChip";
 import { formatMinutes } from "@/data/scoring";
 import { FocusScore } from "@/data/types";
-import { brutal, colors, spacing } from "@/design/tokens";
+import { colors, spacing } from "@/design/tokens";
 import { useFocusStore } from "@/state/FocusStore";
 
 const DAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
@@ -71,7 +74,8 @@ function buildVectors(tasks: ReturnType<typeof useFocusStore>["tasks"]) {
 }
 
 export default function StatsScreen() {
-  const { currentScore, friends, interventions, scores, tasks } = useFocusStore();
+  const router = useRouter();
+  const { currentScore, interventions, milestones, scores, sessionRecords, tasks } = useFocusStore();
 
   const allScores = useMemo(
     () => [currentScore, ...scores].filter((s) => s.focusMinutes > 0),
@@ -89,10 +93,10 @@ export default function StatsScreen() {
 
   return (
     <Screen>
-      <AppHeader title="FOCUS" subtitle="TELEMETRY" />
+      <AppHeader title="FOCUS" subtitle="PROFILE" />
       <View style={styles.title}>
         <PixelText variant="display" uppercase>
-          Telemetry
+          Profile
         </PixelText>
         <PixelText variant="h2" muted uppercase>
           Week {weekNumber}
@@ -115,9 +119,14 @@ export default function StatsScreen() {
           </PixelText>
         ) : (
           <View style={styles.chart}>
-            {weekly.map((item) => (
-              <View key={item.day} style={styles.barWrap}>
-                <View
+            {weekly.map((item, index) => (
+              <Animated.View
+                key={item.day}
+                entering={FadeInUp.delay(40 * index).duration(260)}
+                layout={Layout.springify().damping(18)}
+                style={styles.barWrap}
+              >
+                <Animated.View
                   style={[
                     styles.bar,
                     { height: `${Math.max(item.minutes > 0 ? 8 : 0, (item.minutes / maxMinutes) * 100)}%` }
@@ -126,7 +135,7 @@ export default function StatsScreen() {
                 <PixelText variant="label" muted>
                   {item.day}
                 </PixelText>
-              </View>
+              </Animated.View>
             ))}
           </View>
         )}
@@ -181,6 +190,59 @@ export default function StatsScreen() {
         </View>
       </PixelCard>
 
+      <PixelCard>
+        <View style={styles.header}>
+          <PixelText variant="h2" uppercase>
+            Milestones
+          </PixelText>
+          <PixelText variant="label" muted uppercase>
+            {milestones.filter((item) => item.unlockedAt).length}/{milestones.length}
+          </PixelText>
+        </View>
+        {milestones.map((milestone) => (
+          <View key={milestone.id} style={styles.milestone}>
+            <View style={styles.friendCopy}>
+              <PixelText style={styles.strong}>{milestone.title}</PixelText>
+              <PixelText muted>{milestone.description}</PixelText>
+            </View>
+            <StatusChip
+              label={milestone.unlockedAt ? "Unlocked" : "Locked"}
+              tone={milestone.unlockedAt ? "good" : "neutral"}
+            />
+          </View>
+        ))}
+      </PixelCard>
+
+      <PixelCard>
+        <View style={styles.header}>
+          <PixelText variant="h2" uppercase>
+            Session History
+          </PixelText>
+          <PixelText variant="label" muted uppercase>
+            {sessionRecords.length} logs
+          </PixelText>
+        </View>
+        {sessionRecords.length === 0 ? (
+          <PixelText muted style={styles.empty}>
+            Completed sessions will appear here with score, difficulty, and task context.
+          </PixelText>
+        ) : (
+          sessionRecords.slice(0, 6).map((record) => (
+            <View key={record.id} style={styles.historyRow}>
+              <View style={styles.friendCopy}>
+                <PixelText style={styles.strong} numberOfLines={1}>
+                  {record.completedTaskTitles[0] ?? "Focus session"}
+                </PixelText>
+                <PixelText variant="label" muted uppercase>
+                  {formatMinutes(Math.floor(record.elapsedSeconds / 60))} · {record.difficulty}
+                </PixelText>
+              </View>
+              <PixelText variant="h2">{record.score}</PixelText>
+            </View>
+          ))
+        )}
+      </PixelCard>
+
       {/* Summary metrics */}
       <View style={styles.metrics}>
         <PixelCard style={styles.metric}>
@@ -197,47 +259,19 @@ export default function StatsScreen() {
         </PixelCard>
       </View>
 
-      {/* Zen Circle */}
+      {/* Local privacy summary */}
       <PixelCard>
         <View style={styles.header}>
           <PixelText variant="h2" uppercase>
-            Zen Circle
+            Privacy
           </PixelText>
-          <PixelButton label="Invite" icon="add" compact />
+          <StatusChip label="Local only" tone="dark" />
         </View>
-        {friends.map((friend, index) => (
-          <View key={friend.id} style={[styles.friend, index === 0 && styles.friendActive]}>
-            <PixelText variant="h2" inverted={index === 0} muted={index !== 0}>
-              {String(index + 1).padStart(2, "0")}
-            </PixelText>
-            <View style={[styles.avatar, brutal.border, index === 0 && styles.avatarActive]}>
-              <PixelText variant="label" inverted={index === 0}>
-                {friend.name.slice(0, 2).toUpperCase()}
-              </PixelText>
-            </View>
-            <View style={styles.friendCopy}>
-              <PixelText style={styles.strong} inverted={index === 0}>
-                {friend.name}
-              </PixelText>
-              <PixelText variant="label" muted={index !== 0} inverted={index === 0}>
-                {friend.status}
-              </PixelText>
-            </View>
-            <View style={styles.friendScore}>
-              <PixelText variant="h2" inverted={index === 0}>
-                {friend.focusHours}h
-              </PixelText>
-              <PixelText variant="label" muted={index !== 0} inverted={index === 0}>
-                {friend.score}
-              </PixelText>
-            </View>
-          </View>
-        ))}
-        {friends.length <= 1 && (
-          <PixelText muted style={styles.empty}>
-            Invite friends to compare focus scores.
-          </PixelText>
-        )}
+        <PixelText muted>
+          This beta stores focus history, task queue, targets, and settings on this device. Social and
+          cloud sync are intentionally deferred.
+        </PixelText>
+        <PixelButton label="Settings" icon="settings" compact onPress={() => router.push("/settings")} />
       </PixelCard>
     </Screen>
   );
@@ -326,5 +360,22 @@ const styles = StyleSheet.create({
   },
   friendScore: {
     alignItems: "flex-end"
+  },
+  milestone: {
+    alignItems: "center",
+    borderTopColor: colors.primary,
+    borderTopWidth: 2,
+    flexDirection: "row",
+    gap: spacing.sm,
+    paddingVertical: spacing.sm
+  },
+  historyRow: {
+    alignItems: "center",
+    borderTopColor: colors.primary,
+    borderTopWidth: 2,
+    flexDirection: "row",
+    gap: spacing.sm,
+    justifyContent: "space-between",
+    paddingVertical: spacing.sm
   }
 });

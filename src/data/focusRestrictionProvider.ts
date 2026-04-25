@@ -1,5 +1,14 @@
 import { Platform } from "react-native";
-import { BlockRule, Difficulty, FocusSession, PermissionStatus, UsageReport } from "./types";
+import { BlockRule, Difficulty, FocusSession, PermissionStatus, ProtectionStatus, UsageReport } from "./types";
+
+export type RestrictionResult = {
+  applied: boolean;
+  status: PermissionStatus;
+  protectionStatus: ProtectionStatus;
+  reason: "native-unavailable" | "permission-needed" | "applied" | "simulated" | "failed";
+  message: string;
+  requiresNativeBuild: boolean;
+};
 
 export type FocusRestrictionProvider = {
   requestPermissions(): Promise<PermissionStatus>;
@@ -8,7 +17,7 @@ export type FocusRestrictionProvider = {
     session: FocusSession,
     targets: string[],
     difficulty: Difficulty
-  ): Promise<{ applied: boolean; status: PermissionStatus; message: string }>;
+  ): Promise<RestrictionResult>;
   stopFocusSession(sessionId: string): Promise<void>;
   applyScheduledRules(rules: BlockRule[]): Promise<{ applied: number; status: PermissionStatus }>;
   getUsageReport(range: { start: Date; end: Date }): Promise<UsageReport>;
@@ -25,9 +34,15 @@ export const restrictionProvider: FocusRestrictionProvider = {
   },
   async startFocusSession(session, targets, difficulty) {
     const status = await this.requestPermissions();
+    const nativeRuntime = Platform.OS === "ios" || Platform.OS === "android";
+    const applied = status === "granted" && !nativeRuntime;
+    const simulated = status !== "denied" && !applied;
     return {
-      applied: status !== "denied",
+      applied,
       status,
+      protectionStatus: applied ? "applied" : simulated ? "simulated" : "permission-needed",
+      reason: applied ? "applied" : simulated ? "simulated" : "permission-needed",
+      requiresNativeBuild: nativeRuntime,
       message:
         Platform.OS === "ios"
           ? "Screen Time shields require a development build with Family Controls entitlement."

@@ -1,39 +1,79 @@
 import { MaterialIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
-import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import { AppHeader } from "@/components/AppHeader";
+import { EmptyState } from "@/components/EmptyState";
 import { PixelButton } from "@/components/PixelButton";
 import { PixelCard } from "@/components/PixelCard";
 import { PixelText } from "@/components/PixelText";
 import { Screen } from "@/components/Screen";
+import { StatusChip } from "@/components/StatusChip";
+
 import { TaskRow } from "@/components/TaskRow";
 import { WheelPicker } from "@/components/WheelPicker";
-import { formatMinutes } from "@/data/scoring";
+import { formatMinutes, formatTimer } from "@/data/scoring";
 import { colors, layout, spacing } from "@/design/tokens";
 import { useFocusStore } from "@/state/FocusStore";
 
 const ESTIMATE_VALUES = [5, 10, 15, 20, 25, 30, 40, 45, 60, 90, 120];
 
 export default function TasksScreen() {
+  const router = useRouter();
   const { tasks, activeSession, dispatch } = useFocusStore();
   const [title, setTitle] = useState("");
   const [estimateMinutes, setEstimateMinutes] = useState(25);
+  const [category, setCategory] = useState("Focus");
   const [showPicker, setShowPicker] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
 
   const todoCount = useMemo(() => tasks.filter((task) => task.status !== "completed").length, [tasks]);
   const activeTask = tasks.find((task) => task.status === "in-progress");
 
   function addTask() {
     if (!title.trim()) return;
-    dispatch({ type: "add-task", title, estimateMinutes, category: "Focus" });
+    if (editingTaskId) {
+      dispatch({ type: "update-task", taskId: editingTaskId, title, estimateMinutes, category });
+      setEditingTaskId(null);
+    } else {
+      dispatch({ type: "add-task", title, estimateMinutes, category });
+    }
     setTitle("");
     setEstimateMinutes(25);
+    setCategory("Focus");
     setShowPicker(false);
   }
 
+  function editTask(taskId: string) {
+    const task = tasks.find((item) => item.id === taskId);
+    if (!task) return;
+    setEditingTaskId(task.id);
+    setTitle(task.title);
+    setEstimateMinutes(task.estimateMinutes);
+    setCategory(task.category);
+    setShowPicker(true);
+  }
+
+  function startTask(taskId: string) {
+    dispatch({ type: "start-task", taskId });
+    router.push("/(tabs)/focus");
+  }
+
+  function confirmDelete(taskId: string) {
+    Alert.alert("Delete Task", "Remove this task from your local queue?", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: () => dispatch({ type: "delete-task", taskId }) }
+    ]);
+  }
+
   return (
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={0}
+    >
     <Screen>
-      <AppHeader title="FOCUS" subtitle={`${todoCount} TASKS`} />
+      <AppHeader title="FOCUS" subtitle="QUEUE" />
 
       {/* Active task card */}
       <View style={styles.titleRow}>
@@ -42,15 +82,17 @@ export default function TasksScreen() {
         </PixelText>
       </View>
       <PixelCard thick>
-        <View style={styles.badge}>
-          <PixelText variant="label" uppercase inverted>
-            {activeSession.status === "running"
+        <StatusChip
+          label={
+            activeSession.status === "running"
               ? "Running"
               : activeSession.status === "paused"
                 ? "Paused"
-                : "Idle"}
-          </PixelText>
-        </View>
+                : "Idle"
+          }
+          tone={activeSession.status === "running" ? "good" : activeSession.status === "paused" ? "warn" : "neutral"}
+          icon="timer"
+        />
         <PixelText variant="h2">{activeTask?.title ?? "No active task"}</PixelText>
         {activeTask ? (
           <>
@@ -60,7 +102,9 @@ export default function TasksScreen() {
                 <PixelText variant="label" muted uppercase>
                   Elapsed
                 </PixelText>
-                <PixelText variant="display">{formatMinutes(activeSession.actualMinutes)}</PixelText>
+                <PixelText variant="display" style={styles.tabular}>
+                  {formatTimer(activeSession.elapsedSeconds)}
+                </PixelText>
               </View>
               <View style={styles.timeDivider} />
               <View>
@@ -88,25 +132,45 @@ export default function TasksScreen() {
         </PixelText>
       </View>
 
-      {tasks.length === 0 ? (
-        <PixelCard>
-          <PixelText variant="h2" uppercase>
-            Empty Queue
-          </PixelText>
-          <PixelText muted>Add your first task below to get started.</PixelText>
-        </PixelCard>
-      ) : (
+      {tasks.length === 0 ? null : (
         <View style={styles.queue}>
-          {tasks.map((task) => (
-            <TaskRow
-              key={task.id}
-              task={task}
-              onStart={() => dispatch({ type: "start-task", taskId: task.id })}
-              onComplete={() => dispatch({ type: "complete-task", taskId: task.id })}
-            />
+          {tasks.map((task, index) => (
+            <View key={task.id} style={styles.taskWrap}>
+              <View style={styles.reorderRail}>
+                <PixelButton
+                  icon="keyboard-arrow-up"
+                  compact
+                  disabled={index === 0}
+                  onPress={() => dispatch({ type: "move-task", taskId: task.id, direction: "up" })}
+                />
+                <PixelButton
+                  icon="keyboard-arrow-down"
+                  compact
+                  disabled={index === tasks.length - 1}
+                  onPress={() => dispatch({ type: "move-task", taskId: task.id, direction: "down" })}
+                />
+              </View>
+              <View style={styles.taskMain}>
+                <TaskRow
+                  task={task}
+                  onStart={() => startTask(task.id)}
+                  onEdit={() => editTask(task.id)}
+                  onDelete={() => confirmDelete(task.id)}
+                  onComplete={() => dispatch({ type: "complete-task", taskId: task.id })}
+                />
+              </View>
+            </View>
           ))}
         </View>
       )}
+
+      {tasks.length === 0 ? (
+        <EmptyState
+          icon="bolt"
+          title="Start Small"
+          body="A production focus flow begins with a single clear task and a realistic time box."
+        />
+      ) : null}
 
       {/* Add task */}
       <View style={styles.addWrap}>
@@ -114,10 +178,18 @@ export default function TasksScreen() {
           <TextInput
             value={title}
             onChangeText={setTitle}
-            placeholder="Add new task..."
+            placeholder={editingTaskId ? "Edit task..." : "Add new task..."}
             placeholderTextColor={colors.textMuted}
             style={styles.input}
             onSubmitEditing={addTask}
+            returnKeyType="done"
+          />
+          <TextInput
+            value={category}
+            onChangeText={setCategory}
+            placeholder="Focus"
+            placeholderTextColor={colors.textMuted}
+            style={styles.categoryInput}
             returnKeyType="done"
           />
           <TouchableOpacity
@@ -137,7 +209,7 @@ export default function TasksScreen() {
               {estimateMinutes}m
             </PixelText>
           </TouchableOpacity>
-          <PixelButton icon="add" compact onPress={addTask} />
+          <PixelButton icon={editingTaskId ? "check" : "add"} compact onPress={addTask} />
         </View>
 
         {showPicker && (
@@ -154,10 +226,14 @@ export default function TasksScreen() {
         )}
       </View>
     </Screen>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: {
+    flex: 1
+  },
   titleRow: {
     alignItems: "flex-end",
     borderBottomColor: colors.primary,
@@ -165,13 +241,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     paddingBottom: spacing.xs
-  },
-  badge: {
-    alignSelf: "flex-start",
-    backgroundColor: colors.primary,
-    marginBottom: spacing.sm,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: spacing.base
   },
   description: {
     borderLeftColor: colors.primary,
@@ -195,6 +264,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
     width: 2
   },
+  tabular: {
+    fontVariant: ["tabular-nums"]
+  },
   count: {
     borderColor: colors.primary,
     borderWidth: layout.border,
@@ -204,6 +276,22 @@ const styles = StyleSheet.create({
   queue: {
     borderColor: colors.primary,
     borderWidth: layout.border
+  },
+  taskWrap: {
+    alignItems: "stretch",
+    borderBottomColor: colors.primary,
+    borderBottomWidth: 1,
+    flexDirection: "row"
+  },
+  reorderRail: {
+    borderRightColor: colors.primary,
+    borderRightWidth: 1,
+    gap: spacing.base,
+    justifyContent: "center",
+    padding: spacing.base
+  },
+  taskMain: {
+    flex: 1
   },
   addWrap: {
     borderColor: colors.primary,
@@ -223,6 +311,16 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     minHeight: 44,
     paddingHorizontal: spacing.xs
+  },
+  categoryInput: {
+    borderColor: colors.primary,
+    borderWidth: layout.border,
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: "800",
+    minHeight: 44,
+    paddingHorizontal: spacing.xs,
+    width: 78
   },
   timeChip: {
     alignItems: "center",

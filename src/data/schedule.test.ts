@@ -9,6 +9,8 @@ const rule: BlockRule = {
   targetIds: ["social"],
   mode: "focus",
   difficulty: "strict",
+  accessMode: "blocklist",
+  breaksAllowed: 1,
   enabled: true
 };
 

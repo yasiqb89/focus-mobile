@@ -3,19 +3,35 @@
     "name": "Focus",
     "slug": "focus-mobile",
     "scheme": "focus",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#fdf8f8"
+    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.focus.mobile"
+      "bundleIdentifier": "app.focus.mobile",
+      "buildNumber": "2",
+      "infoPlist": {
+        "NSUserNotificationsUsageDescription": "Focus can remind you when a scheduled focus block is about to start.",
+        "NSCalendarsUsageDescription": "Focus may use calendar context in a future release to help schedule protected focus time."
+      }
     },
     "android": {
       "package": "app.focus.mobile",
+      "versionCode": 2,
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#fdf8f8"
       }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-router",
