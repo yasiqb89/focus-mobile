@@ -286,7 +286,13 @@ export default function FocusScreen() {
         </View>
         {upNext.length === 0 ? (
           <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.emptyPanel}>
-            <PixelText muted>All queued work is complete.</PixelText>
+            <PixelText muted>No upcoming tasks.</PixelText>
+            <PixelButton
+              label="Add a Task"
+              icon="add"
+              compact
+              onPress={() => router.push("/(tabs)/tasks")}
+            />
           </Animated.View>
         ) : (
           <ScrollView style={styles.queueList} showsVerticalScrollIndicator={false}>
@@ -294,7 +300,7 @@ export default function FocusScreen() {
               <TaskRow
                 key={task.id}
                 task={task}
-                onStart={() => dispatch({ type: "start-task", taskId: task.id })}
+                onStart={() => dispatch({ type: "start-session", taskId: task.id })}
               />
             ))}
           </ScrollView>
@@ -338,45 +344,50 @@ const styles = StyleSheet.create({
   },
   timerCard: {
     gap: spacing.xs,
-    padding: spacing.sm
+    padding: spacing.sm,
+    borderRadius: 4
   },
   sessionTop: {
     alignItems: "flex-start",
     flexDirection: "row",
-    gap: spacing.sm,
+    gap: spacing.xs,
     justifyContent: "space-between"
   },
   sessionCopy: {
     flex: 1,
-    gap: spacing.base
+    gap: 3
   },
   taskTitle: {
-    fontSize: 21,
-    lineHeight: 25
+    fontSize: 18,
+    lineHeight: 22,
+    letterSpacing: 0.3
   },
   scoreChip: {
     alignItems: "center",
     backgroundColor: colors.primary,
     borderColor: colors.primary,
     borderWidth: layout.border,
-    minWidth: 64,
+    minWidth: 56,
     paddingHorizontal: spacing.xs,
-    paddingVertical: spacing.base
+    paddingVertical: spacing.base,
+    borderRadius: 2
   },
   timeGrid: {
     alignItems: "center",
     flexDirection: "row",
     gap: spacing.sm,
-    justifyContent: "center"
+    justifyContent: "center",
+    paddingVertical: spacing.base
   },
   timeCell: {
     alignItems: "center",
-    flex: 1
+    flex: 1,
+    gap: 2
   },
   timeDivider: {
-    backgroundColor: colors.primary,
-    height: 34,
-    width: 2
+    backgroundColor: colors.surfaceHigh,
+    height: 30,
+    width: 1
   },
   tabular: {
     fontVariant: ["tabular-nums"]
@@ -384,8 +395,9 @@ const styles = StyleSheet.create({
   breakBanner: {
     alignItems: "center",
     backgroundColor: colors.warningContainer,
-    borderColor: colors.primary,
-    borderWidth: layout.border,
+    borderColor: colors.warning,
+    borderWidth: 1,
+    borderRadius: 2,
     flexDirection: "row",
     justifyContent: "space-between",
     padding: spacing.xs
@@ -393,7 +405,8 @@ const styles = StyleSheet.create({
   controls: {
     alignItems: "center",
     flexDirection: "row",
-    gap: spacing.xs
+    gap: spacing.xs,
+    paddingTop: spacing.base
   },
   mainControl: {
     flex: 1
@@ -433,8 +446,10 @@ const styles = StyleSheet.create({
     minHeight: 0
   },
   emptyPanel: {
+    alignItems: "flex-start",
     borderColor: colors.outline,
     borderWidth: 1,
+    gap: spacing.xs,
     padding: spacing.sm
   },
   input: {

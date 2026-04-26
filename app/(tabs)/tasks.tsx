@@ -1,15 +1,13 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import { AppHeader } from "@/components/AppHeader";
-import { EmptyState } from "@/components/EmptyState";
 import { PixelButton } from "@/components/PixelButton";
 import { PixelCard } from "@/components/PixelCard";
 import { PixelText } from "@/components/PixelText";
 import { Screen } from "@/components/Screen";
 import { StatusChip } from "@/components/StatusChip";
-
 import { TaskRow } from "@/components/TaskRow";
 import { WheelPicker } from "@/components/WheelPicker";
 import { formatMinutes, formatTimer } from "@/data/scoring";
@@ -17,6 +15,7 @@ import { colors, layout, spacing } from "@/design/tokens";
 import { useFocusStore } from "@/state/FocusStore";
 
 const ESTIMATE_VALUES = [5, 10, 15, 20, 25, 30, 40, 45, 60, 90, 120];
+const CATEGORIES = ["Focus", "Work", "Health", "Personal", "Learning", "Creative", "Admin"];
 
 export default function TasksScreen() {
   const router = useRouter();
@@ -27,8 +26,8 @@ export default function TasksScreen() {
   const [showPicker, setShowPicker] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
 
-  const todoCount = useMemo(() => tasks.filter((task) => task.status !== "completed").length, [tasks]);
   const activeTask = tasks.find((task) => task.status === "in-progress");
+  const taskCount = useMemo(() => tasks.filter((task) => task.status !== "completed").length, [tasks]);
 
   function addTask() {
     if (!title.trim()) return;
@@ -66,166 +65,162 @@ export default function TasksScreen() {
     ]);
   }
 
+  const sessionStatus = activeSession.status === "running"
+    ? "Running"
+    : activeSession.status === "paused"
+      ? "Paused"
+      : "Idle";
+  const sessionTone = activeSession.status === "running" ? "good" : activeSession.status === "paused" ? "warn" : "neutral";
+
   return (
     <KeyboardAvoidingView
       style={styles.flex}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={0}
     >
-    <Screen>
-      <AppHeader title="FOCUS" subtitle="QUEUE" />
+      <Screen>
+        <AppHeader title="FOCUS" subtitle="QUEUE" />
 
-      {/* Active task card */}
-      <View style={styles.titleRow}>
-        <PixelText variant="h1" uppercase>
-          Current Flow
-        </PixelText>
-      </View>
-      <PixelCard thick>
-        <StatusChip
-          label={
-            activeSession.status === "running"
-              ? "Running"
-              : activeSession.status === "paused"
-                ? "Paused"
-                : "Idle"
-          }
-          tone={activeSession.status === "running" ? "good" : activeSession.status === "paused" ? "warn" : "neutral"}
-          icon="timer"
-        />
-        <PixelText variant="h2">{activeTask?.title ?? "No active task"}</PixelText>
-        {activeTask ? (
-          <>
-            <View style={styles.line} />
-            <View style={styles.timeRow}>
-              <View>
-                <PixelText variant="label" muted uppercase>
-                  Elapsed
-                </PixelText>
-                <PixelText variant="display" style={styles.tabular}>
-                  {formatTimer(activeSession.elapsedSeconds)}
-                </PixelText>
-              </View>
-              <View style={styles.timeDivider} />
-              <View>
-                <PixelText variant="label" muted uppercase>
-                  Planned
-                </PixelText>
-                <PixelText variant="h1">{formatMinutes(activeSession.plannedMinutes)}</PixelText>
-              </View>
-            </View>
-          </>
-        ) : (
-          <PixelText muted style={styles.description}>
-            Pick a task below to bind it to the focus timer.
+        {/* Compact current flow strip */}
+        <PixelCard style={styles.flowStrip}>
+          <View style={styles.flowRow}>
+            <StatusChip label={sessionStatus} tone={sessionTone} icon="timer" />
+            <PixelText variant="body" style={styles.flowTitle} numberOfLines={1}>
+              {activeTask?.title ?? "No active task"}
+            </PixelText>
+            {activeTask ? (
+              <PixelText variant="label" muted uppercase style={styles.flowMeta}>
+                {formatTimer(activeSession.elapsedSeconds)} / {formatMinutes(activeSession.plannedMinutes)}
+              </PixelText>
+            ) : null}
+          </View>
+        </PixelCard>
+
+        {/* Queue header */}
+        <View style={styles.queueHeader}>
+          <PixelText variant="label" muted uppercase>
+            Queue
           </PixelText>
-        )}
-      </PixelCard>
-
-      {/* Queue */}
-      <View style={styles.titleRow}>
-        <PixelText variant="h1" uppercase>
-          Queue
-        </PixelText>
-        <PixelText variant="label" muted uppercase style={styles.count}>
-          {tasks.length} Tasks
-        </PixelText>
-      </View>
-
-      {tasks.length === 0 ? null : (
-        <View style={styles.queue}>
-          {tasks.map((task, index) => (
-            <View key={task.id} style={styles.taskWrap}>
-              <View style={styles.reorderRail}>
-                <PixelButton
-                  icon="keyboard-arrow-up"
-                  compact
-                  disabled={index === 0}
-                  onPress={() => dispatch({ type: "move-task", taskId: task.id, direction: "up" })}
-                />
-                <PixelButton
-                  icon="keyboard-arrow-down"
-                  compact
-                  disabled={index === tasks.length - 1}
-                  onPress={() => dispatch({ type: "move-task", taskId: task.id, direction: "down" })}
-                />
-              </View>
-              <View style={styles.taskMain}>
-                <TaskRow
-                  task={task}
-                  onStart={() => startTask(task.id)}
-                  onEdit={() => editTask(task.id)}
-                  onDelete={() => confirmDelete(task.id)}
-                  onComplete={() => dispatch({ type: "complete-task", taskId: task.id })}
-                />
-              </View>
-            </View>
-          ))}
-        </View>
-      )}
-
-      {tasks.length === 0 ? (
-        <EmptyState
-          icon="bolt"
-          title="Start Small"
-          body="A production focus flow begins with a single clear task and a realistic time box."
-        />
-      ) : null}
-
-      {/* Add task */}
-      <View style={styles.addWrap}>
-        <View style={styles.addRow}>
-          <TextInput
-            value={title}
-            onChangeText={setTitle}
-            placeholder={editingTaskId ? "Edit task..." : "Add new task..."}
-            placeholderTextColor={colors.textMuted}
-            style={styles.input}
-            onSubmitEditing={addTask}
-            returnKeyType="done"
-          />
-          <TextInput
-            value={category}
-            onChangeText={setCategory}
-            placeholder="Focus"
-            placeholderTextColor={colors.textMuted}
-            style={styles.categoryInput}
-            returnKeyType="done"
-          />
-          <TouchableOpacity
-            style={[styles.timeChip, showPicker && styles.timeChipActive]}
-            onPress={() => setShowPicker((v) => !v)}
-          >
-            <MaterialIcons
-              name="schedule"
-              size={14}
-              color={showPicker ? colors.onPrimary : colors.textMuted}
-            />
-            <PixelText
-              variant="label"
-              uppercase
-              style={showPicker ? styles.chipTextActive : styles.chipText}
-            >
-              {estimateMinutes}m
+          {taskCount > 0 ? (
+            <PixelText variant="label" muted uppercase>
+              {taskCount} pending
             </PixelText>
-          </TouchableOpacity>
-          <PixelButton icon={editingTaskId ? "check" : "add"} compact onPress={addTask} />
+          ) : null}
         </View>
 
-        {showPicker && (
-          <View style={styles.pickerWrap}>
-            <PixelText variant="label" muted uppercase style={styles.pickerLabel}>
-              Estimated time
-            </PixelText>
-            <WheelPicker
-              values={ESTIMATE_VALUES}
-              selected={estimateMinutes}
-              onSelect={setEstimateMinutes}
-            />
+        {/* Task list */}
+        {tasks.length === 0 ? (
+          <View style={styles.emptyHint}>
+            <PixelText muted>No tasks yet — add one below to get started.</PixelText>
+          </View>
+        ) : (
+          <View style={styles.queue}>
+            {tasks.map((task, index) => (
+              <View key={task.id} style={styles.taskWrap}>
+                <View style={styles.reorderRail}>
+                  <PixelButton
+                    icon="keyboard-arrow-up"
+                    compact
+                    disabled={index === 0}
+                    onPress={() => dispatch({ type: "move-task", taskId: task.id, direction: "up" })}
+                  />
+                  <PixelButton
+                    icon="keyboard-arrow-down"
+                    compact
+                    disabled={index === tasks.length - 1}
+                    onPress={() => dispatch({ type: "move-task", taskId: task.id, direction: "down" })}
+                  />
+                </View>
+                <View style={styles.taskMain}>
+                  <TaskRow
+                    task={task}
+                    onStart={() => startTask(task.id)}
+                    onEdit={() => editTask(task.id)}
+                    onDelete={() => confirmDelete(task.id)}
+                    onComplete={() => dispatch({ type: task.status === "completed" ? "uncomplete-task" : "complete-task", taskId: task.id })}
+                  />
+                </View>
+              </View>
+            ))}
           </View>
         )}
-      </View>
-    </Screen>
+
+        {/* Add task — visually anchored at bottom */}
+        <View style={styles.addWrap}>
+          <View style={styles.addLabel}>
+            <MaterialIcons name="add-task" size={14} color={colors.primary} />
+            <PixelText variant="label" uppercase>
+              {editingTaskId ? "Edit Task" : "New Task"}
+            </PixelText>
+          </View>
+          <View style={styles.addRow}>
+            <TextInput
+              value={title}
+              onChangeText={setTitle}
+              placeholder={editingTaskId ? "Edit task title..." : "What needs to get done?"}
+              placeholderTextColor={colors.textMuted}
+              style={styles.input}
+              onSubmitEditing={addTask}
+              returnKeyType="done"
+            />
+            <TouchableOpacity
+              style={[styles.timeChip, showPicker && styles.timeChipActive]}
+              onPress={() => setShowPicker((v) => !v)}
+            >
+              <MaterialIcons
+                name="schedule"
+                size={14}
+                color={showPicker ? colors.onPrimary : colors.textMuted}
+              />
+              <PixelText
+                variant="label"
+                uppercase
+                style={showPicker ? styles.chipTextActive : styles.chipText}
+              >
+                {estimateMinutes}m
+              </PixelText>
+            </TouchableOpacity>
+            <PixelButton icon={editingTaskId ? "check" : "add"} compact onPress={addTask} />
+          </View>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.categoryRow}
+            contentContainerStyle={styles.categoryRowContent}
+          >
+            {CATEGORIES.map((cat) => (
+              <TouchableOpacity
+                key={cat}
+                style={[styles.categoryChip, category === cat && styles.categoryChipActive]}
+                onPress={() => setCategory(cat)}
+                activeOpacity={0.7}
+              >
+                <PixelText
+                  variant="label"
+                  uppercase
+                  style={category === cat ? styles.chipTextActive : styles.chipText}
+                >
+                  {cat}
+                </PixelText>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          {showPicker && (
+            <View style={styles.pickerWrap}>
+              <PixelText variant="label" muted uppercase style={styles.pickerLabel}>
+                Estimated time
+              </PixelText>
+              <WheelPicker
+                values={ESTIMATE_VALUES}
+                selected={estimateMinutes}
+                onSelect={setEstimateMinutes}
+              />
+            </View>
+          )}
+        </View>
+      </Screen>
     </KeyboardAvoidingView>
   );
 }
@@ -234,44 +229,35 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1
   },
-  titleRow: {
-    alignItems: "flex-end",
-    borderBottomColor: colors.primary,
-    borderBottomWidth: 4,
+  flowStrip: {
+    padding: spacing.xs
+  },
+  flowRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.xs
+  },
+  flowTitle: {
+    flex: 1,
+    fontWeight: "700"
+  },
+  flowMeta: {
+    flexShrink: 0
+  },
+  queueHeader: {
+    alignItems: "center",
+    borderBottomColor: colors.surfaceHigh,
+    borderBottomWidth: 1,
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingBottom: spacing.xs
+    paddingBottom: spacing.base,
+    paddingHorizontal: spacing.base,
+    marginTop: spacing.xs
   },
-  description: {
-    borderLeftColor: colors.primary,
-    borderLeftWidth: 2,
-    marginTop: spacing.sm,
-    paddingLeft: spacing.sm
-  },
-  line: {
-    backgroundColor: colors.primary,
-    height: 2,
-    marginVertical: spacing.sm
-  },
-  timeRow: {
-    alignItems: "flex-end",
-    flexDirection: "row",
-    gap: spacing.md
-  },
-  timeDivider: {
-    backgroundColor: colors.primary,
-    height: 40,
-    marginBottom: spacing.xs,
-    width: 2
-  },
-  tabular: {
-    fontVariant: ["tabular-nums"]
-  },
-  count: {
-    borderColor: colors.primary,
-    borderWidth: layout.border,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: spacing.base
+  emptyHint: {
+    paddingHorizontal: spacing.base,
+    paddingVertical: spacing.sm
   },
   queue: {
     borderColor: colors.primary,
@@ -295,7 +281,18 @@ const styles = StyleSheet.create({
   },
   addWrap: {
     borderColor: colors.primary,
-    borderWidth: layout.borderThick
+    borderWidth: layout.borderThick,
+    marginTop: spacing.sm
+  },
+  addLabel: {
+    alignItems: "center",
+    backgroundColor: colors.surfaceLow,
+    borderBottomColor: colors.primary,
+    borderBottomWidth: layout.border,
+    flexDirection: "row",
+    gap: spacing.base,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.base
   },
   addRow: {
     alignItems: "center",
@@ -312,15 +309,23 @@ const styles = StyleSheet.create({
     minHeight: 44,
     paddingHorizontal: spacing.xs
   },
-  categoryInput: {
+  categoryRow: {
+    borderTopColor: colors.primary,
+    borderTopWidth: layout.border
+  },
+  categoryRowContent: {
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs
+  },
+  categoryChip: {
     borderColor: colors.primary,
     borderWidth: layout.border,
-    color: colors.text,
-    fontSize: 13,
-    fontWeight: "800",
-    minHeight: 44,
     paddingHorizontal: spacing.xs,
-    width: 78
+    paddingVertical: spacing.base
+  },
+  categoryChipActive: {
+    backgroundColor: colors.primary
   },
   timeChip: {
     alignItems: "center",

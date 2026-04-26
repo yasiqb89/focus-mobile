@@ -9,7 +9,7 @@ export const colors = {
   text: "#1c1b1b",
   textMuted: "#444748",
   outline: "#747878",
-  primary: "#000000",
+  primary: "#4a4a4a",
   onPrimary: "#ffffff",
   error: "#ba1a1a",
   errorContainer: "#ffdad6",
@@ -60,9 +60,9 @@ export const typography = {
 };
 
 export const layout = {
-  border: 2,
-  borderThick: 4,
-  shadowOffset: 4,
+  border: 1,
+  borderThick: 2,
+  shadowOffset: 3,
   bottomNavHeight: 78
 };
 

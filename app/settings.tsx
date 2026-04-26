@@ -148,7 +148,6 @@ export default function SettingsScreen() {
               {onboarded ? "Yes" : "No"}
             </PixelText>
           </View>
-          <PixelButton label="Back" icon="arrow-back" compact onPress={() => router.back()} />
         </View>
       </PixelCard>
 
@@ -196,7 +195,7 @@ export default function SettingsScreen() {
           Reset Workspace
         </PixelText>
         <PixelText inverted>
-          Clears tasks, sessions, scores, budget usage, and rule edits while keeping onboarding and permission state.
+          Clears all tasks, sessions, scores, and data — returns you to onboarding.
         </PixelText>
         <View style={styles.dangerAction}>
           <PixelButton
@@ -206,7 +205,7 @@ export default function SettingsScreen() {
             onPress={() =>
               Alert.alert(
                 "Reset Workspace",
-                "This will permanently delete all tasks, sessions, scores, and budget usage. This cannot be undone.",
+                "This will permanently delete all tasks, sessions, scores, and data. You will be taken back to onboarding. This cannot be undone.",
                 [
                   { text: "Cancel", style: "cancel" },
                   {
@@ -220,6 +219,8 @@ export default function SettingsScreen() {
           />
         </View>
       </PixelCard>
+
+      <PixelButton label="Go Back" icon="arrow-back" onPress={() => router.back()} />
     </Screen>
   );
 }

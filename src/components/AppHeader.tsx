@@ -1,9 +1,8 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import { Link } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { colors, spacing } from "@/design/tokens";
-import { PixelButton } from "./PixelButton";
 import { PixelText } from "./PixelText";
 
 type AppHeaderProps = {
@@ -12,22 +11,30 @@ type AppHeaderProps = {
 };
 
 export function AppHeader({ title = "FOCUS", subtitle }: AppHeaderProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const onSettings = pathname === "/settings";
+
   return (
     <View style={styles.wrap}>
-      <View style={styles.brand}>
+      <TouchableOpacity style={styles.brand} activeOpacity={0.7} onPress={() => router.push("/(tabs)/focus")}>
         <MaterialIcons name="terminal" size={21} color={colors.primary} />
         <PixelText variant="h2" uppercase>
           {title}
         </PixelText>
-      </View>
+      </TouchableOpacity>
       {subtitle ? (
         <PixelText variant="label" muted uppercase style={styles.subtitle}>
           {subtitle}
         </PixelText>
       ) : null}
-      <Link href="/settings" asChild>
-        <PixelButton icon="settings" compact />
-      </Link>
+      <TouchableOpacity
+        onPress={() => (onSettings ? router.back() : router.push("/settings"))}
+        style={styles.gearBtn}
+        activeOpacity={0.7}
+      >
+        <MaterialIcons name={onSettings ? "close" : "settings"} size={22} color={colors.primary} />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -36,10 +43,11 @@ const styles = StyleSheet.create({
   wrap: {
     alignItems: "center",
     borderBottomColor: colors.primary,
-    borderBottomWidth: 4,
+    borderBottomWidth: 2,
     flexDirection: "row",
     gap: spacing.sm,
-    paddingBottom: spacing.sm
+    paddingBottom: spacing.xs,
+    marginBottom: spacing.xs
   },
   brand: {
     alignItems: "center",
@@ -49,5 +57,8 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     flexShrink: 0
+  },
+  gearBtn: {
+    padding: spacing.xs
   }
 });

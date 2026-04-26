@@ -233,8 +233,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     gap: spacing.base,
     justifyContent: "center",
-    minHeight: 92,
-    width: 74
+    minHeight: 84,
+    width: 64,
+    borderRadius: 2
   },
   grid: {
     flexDirection: "row",

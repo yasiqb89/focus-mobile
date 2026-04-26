@@ -402,8 +402,8 @@ export default function BlocksScreen() {
 
 const styles = StyleSheet.create({
   title: {
-    borderBottomColor: colors.primary,
-    borderBottomWidth: 4,
+    borderBottomColor: colors.surfaceHigh,
+    borderBottomWidth: 2,
     gap: spacing.xs,
     paddingBottom: spacing.sm
   },
@@ -423,8 +423,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm
   },
   rule: {
-    borderTopColor: colors.primary,
-    borderTopWidth: 2,
+    borderTopColor: colors.surfaceHigh,
+    borderTopWidth: 1,
     gap: spacing.xs,
     marginTop: spacing.sm,
     paddingTop: spacing.sm
@@ -461,8 +461,8 @@ const styles = StyleSheet.create({
   },
   target: {
     alignItems: "center",
-    borderTopColor: colors.primary,
-    borderTopWidth: 2,
+    borderTopColor: colors.surfaceHigh,
+    borderTopWidth: 1,
     flexDirection: "row",
     gap: spacing.sm,
     paddingVertical: spacing.sm

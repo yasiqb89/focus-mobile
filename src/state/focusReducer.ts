@@ -76,6 +76,7 @@ export type FocusAction =
   | { type: "move-task"; taskId: string; direction: "up" | "down" }
   | { type: "start-task"; taskId: string }
   | { type: "complete-task"; taskId: string }
+  | { type: "uncomplete-task"; taskId: string }
   | { type: "set-difficulty"; difficulty: Difficulty }
   | { type: "start-session"; taskId?: string }
   | { type: "pause-session" }
@@ -417,6 +418,15 @@ export function reducer(state: FocusState, action: FocusAction): FocusState {
             : task
         )
       });
+    case "uncomplete-task":
+      return touch({
+        ...state,
+        tasks: state.tasks.map((task) =>
+          task.id === action.taskId
+            ? { ...task, status: "todo" as const, completedAt: undefined }
+            : task
+        )
+      });
     case "set-difficulty":
       return touch({ ...state, activeSession: { ...state.activeSession, difficulty: action.difficulty } });
     case "start-session": {
@@ -737,12 +747,8 @@ export function reducer(state: FocusState, action: FocusAction): FocusState {
       return {
         ...initialState,
         hydrated: true,
-        onboarded: state.onboarded,
-        userName: state.userName,
+        onboarded: false,
         permissionStatus: state.permissionStatus,
-        friends: initialState.friends.map((friend) =>
-          friend.id === "you" ? { ...friend, name: state.userName || "You" } : friend
-        ),
         updatedAt: nowIso()
       };
     default:

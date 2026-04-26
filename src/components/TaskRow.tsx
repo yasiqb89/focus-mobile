@@ -18,17 +18,9 @@ export function TaskRow({ task, onStart, onComplete, onEdit, onDelete }: TaskRow
   const active = task.status === "in-progress";
 
   return (
-    <View style={[styles.row, active && styles.activeRow, completed && styles.dim]}>
-      <Pressable
-        accessibilityRole="checkbox"
-        accessibilityState={{ checked: completed }}
-        onPress={onComplete}
-        style={[styles.check, brutal.border, completed && styles.checked]}
-      >
-        {completed ? <View style={styles.dot} /> : null}
-      </Pressable>
+    <View style={[styles.row, active && styles.activeRow, completed && styles.completedRow]}>
       <View style={styles.copy}>
-        <PixelText variant="body" style={[styles.title, completed && styles.done]}>
+        <PixelText variant="body" style={[styles.title, completed && styles.done]} numberOfLines={2}>
           {task.title}
         </PixelText>
         <View style={styles.meta}>
@@ -36,12 +28,27 @@ export function TaskRow({ task, onStart, onComplete, onEdit, onDelete }: TaskRow
             {task.category}
           </PixelText>
           <PixelText variant="label" muted uppercase>
-            Est: {task.estimateMinutes}m
+            {task.estimateMinutes}m
           </PixelText>
         </View>
       </View>
       <View style={styles.actions}>
-        {onEdit ? (
+        {/* Toggle done / undo */}
+        {onComplete ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={completed ? "Mark as todo" : "Mark as done"}
+            onPress={onComplete}
+            style={[styles.iconButton, brutal.border, completed && styles.doneActive]}
+          >
+            <MaterialIcons
+              name={completed ? "replay" : "check"}
+              size={19}
+              color={completed ? colors.onPrimary : colors.primary}
+            />
+          </Pressable>
+        ) : null}
+        {onEdit && !completed ? (
           <Pressable accessibilityRole="button" onPress={onEdit} style={[styles.iconButton, brutal.border]}>
             <MaterialIcons name="edit" size={19} color={colors.primary} />
           </Pressable>
@@ -51,17 +58,19 @@ export function TaskRow({ task, onStart, onComplete, onEdit, onDelete }: TaskRow
             <MaterialIcons name="delete-outline" size={19} color={colors.error} />
           </Pressable>
         ) : null}
-        <Pressable
-          accessibilityRole="button"
-          onPress={onStart}
-          style={[styles.play, brutal.border, active && styles.playActive]}
-        >
-          <MaterialIcons
-            name={active ? "pause" : "play-arrow"}
-            size={28}
-            color={active ? colors.onPrimary : colors.primary}
-          />
-        </Pressable>
+        {!completed ? (
+          <Pressable
+            accessibilityRole="button"
+            onPress={onStart}
+            style={[styles.play, brutal.border, active && styles.playActive]}
+          >
+            <MaterialIcons
+              name={active ? "pause" : "play-arrow"}
+              size={28}
+              color={active ? colors.onPrimary : colors.primary}
+            />
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );
@@ -71,8 +80,6 @@ const styles = StyleSheet.create({
   row: {
     alignItems: "center",
     backgroundColor: colors.surface,
-    borderBottomColor: colors.primary,
-    borderBottomWidth: 2,
     flexDirection: "row",
     gap: spacing.sm,
     padding: spacing.sm
@@ -80,30 +87,20 @@ const styles = StyleSheet.create({
   activeRow: {
     backgroundColor: colors.surfaceLow
   },
-  check: {
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    height: 30,
-    justifyContent: "center",
-    width: 30
-  },
-  checked: {
-    backgroundColor: colors.outline
-  },
-  dot: {
-    backgroundColor: colors.surface,
-    height: 9,
-    width: 9
+  completedRow: {
+    backgroundColor: colors.surfaceMid,
+    opacity: 0.72
   },
   copy: {
     flex: 1,
-    gap: spacing.xs
+    gap: 3
   },
   title: {
-    fontWeight: "800"
+    fontWeight: "700"
   },
   done: {
-    textDecorationLine: "line-through"
+    textDecorationLine: "line-through",
+    color: colors.textMuted
   },
   meta: {
     alignItems: "center",
@@ -118,6 +115,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2
   },
+  actions: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing.base
+  },
+  iconButton: {
+    alignItems: "center",
+    height: 36,
+    justifyContent: "center",
+    width: 36
+  },
+  doneActive: {
+    backgroundColor: colors.primary
+  },
   play: {
     alignItems: "center",
     height: 48,
@@ -126,19 +137,5 @@ const styles = StyleSheet.create({
   },
   playActive: {
     backgroundColor: colors.primary
-  },
-  actions: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: spacing.xs
-  },
-  iconButton: {
-    alignItems: "center",
-    height: 36,
-    justifyContent: "center",
-    width: 36
-  },
-  dim: {
-    opacity: 0.48
   }
 });
